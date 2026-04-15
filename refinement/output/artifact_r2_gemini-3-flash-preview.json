@@ -1,0 +1,139 @@
+{
+  "system_goal": "System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzaj",
+  "roles": [
+    {
+      "name": " ",
+      "permissions": [
+        "przeglądanie_terminów",
+        "rezerwacja_wizyty",
+        "anulowanie_własnej_rezerwacji"
+      ]
+    },
+    {
+      "name": "Specjalista",
+      "permissions": [
+        "zarządzanie_grafikiem",
+        "podgląd_rezerwacji",
+        "anulowanie_wizyty_pacjenta"
+      ]
+    },
+    {
+      "name": "Administrator",
+      "permissions": [
+        "zarządzanie_użytkownikami",
+        "konfiguracja_systemu",
+        "raportowanie"
+      ]
+    }
+  ],
+  "functional_requirements": [
+    {
+      "id": "FR1",
+      "description": "System musi umożliwiać użytkownikom wyszukiwanie i przeglądanie dostępnych terminów u wybranych specjalistów."
+    },
+    {
+      "id": "FR2",
+      "description": "System musi umożliwiać użytkownikom dokonanie rezerwacji wybranego wolnego terminu."
+    },
+    {
+      "id": "FR3",
+      "description": "System musi umożliwiać użytkownikom anulowanie istniejącej rezerwacji zgodnie z polityką anulowań."
+    },
+    {
+      "id": "FR4",
+      "description": "System musi umożliwiać specjalistom definiowanie, edytowanie i usuwanie dostępnych slotów czasowych w ich grafiku."
+    },
+    {
+      "id": "FR5",
+      "description": "System musi automatycznie blokować termin w momencie potwierdzenia rezerwacji, uniemożliwiając podwójne zapisy na tę samą godzinę."
+    },
+    {
+      "id": "FR6",
+      "description": "System musi wymuszać autoryzację i weryfikację uprawnień dla każdej operacji zgodnie z przypisaną rolą użytkownika."
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR1",
+      "description": "System musi zapewniać czas odpowiedzi na zapytanie o dostępność terminów nie przekraczający 2 sekund przy 1000 równoczesnych użytkownikach."
+    },
+    {
+      "id": "NFR2",
+      "description": "Wszystkie dane osobowe oraz dane o wizytach muszą być szyfrowane zgodnie ze standardem AES-256 oraz spełniać wymogi RODO."
+    },
+    {
+      "id": "NFR3",
+      "description": "System musi charakteryzować się dostępnością na poziomie 99,9% w skali miesiąca."
+    },
+    {
+      "id": "NFR4",
+      "description": "Interfejs użytkownika musi być w pełni responsywny (RWD), zapewniając poprawną obsługę na urządzeniach mobilnych i desktopowych."
+    },
+    {
+      "id": "NFR5",
+      "description": "System musi automatycznie wylogować użytkownika po 15 minutach nieaktywności w celu zapewnienia bezpieczeństwa sesji."
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US1",
+      "description": "Jako Użytkownik chcę wyszukać specjalistę po nazwisku lub specjalizacji, aby szybko znaleźć odpowiednią osobę na wizytę."
+    },
+    {
+      "id": "US2",
+      "description": "Jako Użytkownik chcę otrzymać potwierdzenie rezerwacji na e-mail, aby mieć pewność, że proces zakończył się sukcesem."
+    },
+    {
+      "id": "US3",
+      "description": "Jako Specjalista chcę blokować wybrane dni w grafiku (np. urlop), aby pacjenci nie mogli zapisywać się w czasie mojej nieobecności."
+    },
+    {
+      "id": "US4",
+      "description": "Jako Specjalista chcę widzieć powód wizyty podany przez pacjenta, aby móc lepiej przygotować się do konsultacji."
+    },
+    {
+      "id": "US5",
+      "description": "Jako Administrator chcę generować raporty miesięczne dotyczące liczby zrealizowanych wizyt, aby analizować obłożenie systemu."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "given": "Użytkownik znajduje się na stronie wyszukiwania specjalistów",
+      "when": "Użytkownik wprowadzi nazwisko lub specjalizację w pole wyszukiwania i zatwierdzi wybór",
+      "then": "System wyświetla listę specjalistów pasujących do wpisanych kryteriów"
+    },
+    {
+      "id": "AC2",
+      "given": "Użytkownik pomyślnie przeszedł proces rezerwacji wizyty",
+      "when": "Rezerwacja zostanie zatwierdzona w bazie danych",
+      "then": "System wysyła wiadomość e-mail z potwierdzeniem terminu na adres użytkownika"
+    },
+    {
+      "id": "AC3",
+      "given": "Specjalista jest zalogowany i widzi swój kalendarz pracy",
+      "when": "Specjalista zaznaczy wybrany zakres dni jako niedostępny i zapisze zmiany",
+      "then": "System blokuje możliwość zapisu pacjentów na wizyty w wyznaczonym terminie"
+    },
+    {
+      "id": "AC4",
+      "given": "Specjalista przegląda szczegóły nadchodzącej wizyty w swoim panelu",
+      "when": "Specjalista otworzy kartę konkretnej wizyty",
+      "then": "System wyświetla pole z opisem powodu wizyty wprowadzonym przez pacjenta"
+    },
+    {
+      "id": "AC5",
+      "given": "Administrator jest zalogowany w module analitycznym",
+      "when": "Administrator wybierze miesiąc i wygeneruje raport obłożenia",
+      "then": "System tworzy zestawienie zawierające sumaryczną liczbę zrealizowanych wizyt w wybranym okresie"
+    }
+  ],
+  "metadata": {
+    "version": "llm",
+    "case_study": "appointment-booking",
+    "model_used": "gemini-3-flash-preview",
+    "prompt_log": "[SYSTEM]\nJesteś analitykiem wymagań. Odpowiadaj WYŁĄCZNIE poprawnym JSON.\nŻadnego Markdown ani komentarzy.\n\n[KROK1]\nOpis systemu: System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzają swoim grafikiem. System powinien zapobiegać konfliktom rezerwacji i obsługiwać różne role użytkowników.\n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"roles\": [\n    {\"name\": \"NazwaRoli\", \"permissions\": [\"uprawnienie1\", \"uprawnienie2\"]}\n  ],\n  \"functional_requirements\": [\n    {\"id\": \"FR1\", \"description\": \"Treść wymagania.\"}\n  ]\n}\n\n[KROK2]\nOpis systemu: System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzają swoim grafikiem. System powinien zapobiegać konfliktom rezerwacji i obsługiwać różne role użytkowników.\nWygenerowane FR: {\"roles\": [{\"name\": \"Użytkownik\", \"permissions\": [\"przeglądanie_terminów\", \"rezerwacja_wizyty\", \"anulowanie_własnej_rezerwacji\"]}, {\"name\": \"Specjalista\", \"permissions\": [\"zarządzanie_grafikiem\", \"podgląd_rezerwacji\", \"anulowanie_wizyty_pacjenta\"]}, {\"name\": \"Administrator\", \"permissions\": [\"zarządzanie_użytkownikami\", \"konfiguracja_systemu\", \"raportowanie\"]}], \"functional_requirements\": [{\"id\": \"FR1\", \"description\": \"System musi umożliwiać użytkownikom wyszukiwanie i przeglądanie dostępnych terminów u wybranych specjalistów.\"}, {\"id\": \"FR2\", \"description\": \"System musi umożliwiać użytkownikom dokonanie rezerwacji wybranego wolnego terminu.\"}, {\"id\": \"FR3\", \"description\": \"System musi umożliwiać użytkownikom anulowanie istniejącej rezerwacji zgodnie z polityką anulowań.\"}, {\"id\": \"FR4\", \"description\": \"System musi umożliwiać specjalistom definiowanie, edytowanie i usuwanie dostępnych slotów czasowych w ich grafiku.\"}, {\"id\": \"FR5\", \"description\": \"System musi automatycznie blokować termin w momencie potwierdzenia rezerwacji, uniemożliwiając podwójne zapisy na tę samą godzinę.\"}, {\"id\": \"FR6\", \"description\": \"System musi wymuszać autoryzację i weryfikację uprawnień dla każdej operacji zgodnie z przypisaną rolą użytkownika.\"}]}\n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"non_functional_requirements\": [\n    {\"id\": \"NFR1\", \"description\": \"Treść wymagania.\"}\n  ],\n  \"user_stories\": [\n    {\"id\": \"US1\", \"description\": \"Jako X chcę Y, aby Z.\"}\n  ]\n}\n\n[KROK3]\nUser stories: [{\"id\": \"US1\", \"description\": \"Jako Użytkownik chcę wyszukać specjalistę po nazwisku lub specjalizacji, aby szybko znaleźć odpowiednią osobę na wizytę.\"}, {\"id\": \"US2\", \"description\": \"Jako Użytkownik chcę otrzymać potwierdzenie rezerwacji na e-mail, aby mieć pewność, że proces zakończył się sukcesem.\"}, {\"id\": \"US3\", \"description\": \"Jako Specjalista chcę blokować wybrane dni w grafiku (np. urlop), aby pacjenci nie mogli zapisywać się w czasie mojej nieobecności.\"}, {\"id\": \"US4\", \"description\": \"Jako Specjalista chcę widzieć powód wizyty podany przez pacjenta, aby móc lepiej przygotować się do konsultacji.\"}, {\"id\": \"US5\", \"description\": \"Jako Administrator chcę generować raporty miesięczne dotyczące liczby zrealizowanych wizyt, aby analizować obłożenie systemu.\"}]\n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"acceptance_criteria\": [\n    {\n      \"id\": \"AC1\",\n      \"given\": \"warunek wstępny\",\n      \"when\": \"akcja użytkownika\",\n      \"then\": \"oczekiwany rezultat\"\n    }\n  ]\n}",
+    "human_changes": null,
+    "score": null
+  }
+}
