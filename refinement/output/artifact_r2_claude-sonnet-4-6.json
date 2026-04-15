@@ -1,0 +1,451 @@
+{
+  "system_goal": "System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzaj",
+  "roles": [
+    {
+      "name": "Pacjent",
+      "permissions": [
+        "przeglądanie dostępnych terminów",
+        "dokonywanie rezerwacji wizyty",
+        "anulowanie własnej rezerwacji",
+        "przeglądanie historii własnych rezerwacji",
+        "zarządzanie własnym profilem"
+      ]
+    },
+    {
+      "name": "Specjalista",
+      "permissions": [
+        "zarządzanie własnym grafikiem",
+        "przeglądanie listy własnych rezerwacji",
+        "potwierdzanie rezerwacji",
+        "odwoływanie wizyt",
+        "blokowanie terminów w grafiku",
+        "przeglądanie danych pacjentów przypisanych do wizyt",
+        "zarządzanie własnym profilem"
+      ]
+    },
+    {
+      "name": "Administrator",
+      "permissions": [
+        "zarządzanie kontami użytkowników",
+        "zarządzanie kontami specjalistów",
+        "przeglądanie wszystkich rezerwacji",
+        "anulowanie dowolnej rezerwacji",
+        "generowanie raportów systemowych",
+        "konfiguracja systemu",
+        "zarządzanie kategoriami specjalistów"
+      ]
+    },
+    {
+      "name": "Recepcjonista",
+      "permissions": [
+        "przeglądanie dostępnych terminów wszystkich specjalistów",
+        "dokonywanie rezerwacji w imieniu pacjenta",
+        "anulowanie rezerwacji pacjenta",
+        "przeglądanie listy rezerwacji",
+        "rejestrowanie nowych pacjentów"
+      ]
+    }
+  ],
+  "functional_requirements": [
+    {
+      "id": "FR1",
+      "description": "System umożliwia rejestrację nowych użytkowników z przypisaniem odpowiedniej roli (Pacjent, Specjalista, Recepcjonista, Administrator)."
+    },
+    {
+      "id": "FR2",
+      "description": "System umożliwia logowanie użytkowników za pomocą adresu e-mail i hasła oraz weryfikuje ich tożsamość przed przyznaniem dostępu."
+    },
+    {
+      "id": "FR3",
+      "description": "System wyświetla listę dostępnych terminów wizyt z możliwością filtrowania według specjalisty, daty, godziny oraz specjalizacji."
+    },
+    {
+      "id": "FR4",
+      "description": "System umożliwia pacjentowi dokonanie rezerwacji wybranego terminu u wybranego specjalisty."
+    },
+    {
+      "id": "FR5",
+      "description": "System zapobiega konfliktom rezerwacji poprzez blokowanie terminu natychmiast po jego zarezerwowaniu, uniemożliwiając równoczesną rezerwację tego samego terminu przez dwóch użytkowników."
+    },
+    {
+      "id": "FR6",
+      "description": "System umożliwia pacjentowi anulowanie własnej rezerwacji z zachowaniem określonego limitu czasowego przed planowaną wizytą."
+    },
+    {
+      "id": "FR7",
+      "description": "System wysyła powiadomienia e-mail do pacjenta i specjalisty po dokonaniu, potwierdzeniu lub anulowaniu rezerwacji."
+    },
+    {
+      "id": "FR8",
+      "description": "System wysyła automatyczne przypomnienia o zbliżającej się wizycie do pacjenta i specjalisty w określonym czasie przed wizytą."
+    },
+    {
+      "id": "FR9",
+      "description": "Specjalista może definiować swój grafik dostępności, określając dostępne dni i godziny przyjęć."
+    },
+    {
+      "id": "FR10",
+      "description": "Specjalista może blokować wybrane terminy w swoim grafiku, czyniąc je niedostępnymi dla rezerwacji."
+    },
+    {
+      "id": "FR11",
+      "description": "Specjalista może przeglądać listę wszystkich zarezerwowanych wizyt w swoim grafiku wraz z danymi pacjentów."
+    },
+    {
+      "id": "FR12",
+      "description": "Specjalista może potwierdzić lub odwołać rezerwację dokonaną przez pacjenta, a system powiadamia pacjenta o zmianie statusu."
+    },
+    {
+      "id": "FR13",
+      "description": "Pacjent może przeglądać historię swoich poprzednich i nadchodzących wizyt wraz z ich statusami."
+    },
+    {
+      "id": "FR14",
+      "description": "Recepcjonista może dokonywać rezerwacji wizyt w imieniu pacjenta oraz anulować istniejące rezerwacje."
+    },
+    {
+      "id": "FR15",
+      "description": "Administrator może zarządzać kontami wszystkich użytkowników, w tym tworzyć, edytować, dezaktywować i usuwać konta."
+    },
+    {
+      "id": "FR16",
+      "description": "Administrator może przeglądać wszystkie rezerwacje w systemie oraz generować raporty dotyczące obłożenia grafików i aktywności użytkowników."
+    },
+    {
+      "id": "FR17",
+      "description": "System umożliwia zarządzanie kategoriami i specjalizacjami specjalistów, pozwalając na przypisanie specjalisty do jednej lub wielu specjalizacji."
+    },
+    {
+      "id": "FR18",
+      "description": "System rejestruje historię zmian statusów rezerwacji wraz z informacją o użytkowniku dokonującym zmiany i znacznikiem czasowym."
+    },
+    {
+      "id": "FR19",
+      "description": "System umożliwia użytkownikowi edycję danych własnego profilu, takich jak dane kontaktowe i hasło."
+    },
+    {
+      "id": "FR20",
+      "description": "System obsługuje wyszukiwanie specjalistów według imienia, nazwiska lub specjalizacji i wyświetla ich profile z dostępnymi terminami."
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR1",
+      "description": "System powinien obsługiwać co najmniej 500 jednoczesnych użytkowników bez zauważalnego spadku wydajności, a czas odpowiedzi na żądania nie powinien przekraczać 2 sekund przy normalnym obciążeniu."
+    },
+    {
+      "id": "NFR2",
+      "description": "System powinien być dostępny przez co najmniej 99,5% czasu w skali miesiąca, z wyłączeniem zaplanowanych okien serwisowych."
+    },
+    {
+      "id": "NFR3",
+      "description": "Wszystkie dane przesyłane między klientem a serwerem muszą być szyfrowane przy użyciu protokołu TLS 1.2 lub nowszego."
+    },
+    {
+      "id": "NFR4",
+      "description": "Hasła użytkowników muszą być przechowywane w bazie danych w postaci zahaszowanej z użyciem algorytmu bcrypt lub równoważnego, z odpowiednim współczynnikiem kosztu."
+    },
+    {
+      "id": "NFR5",
+      "description": "System musi być zgodny z przepisami RODO, w tym zapewniać możliwość eksportu i usunięcia danych osobowych użytkownika na jego żądanie."
+    },
+    {
+      "id": "NFR6",
+      "description": "Interfejs użytkownika powinien być responsywny i poprawnie wyświetlać się na urządzeniach mobilnych, tabletach oraz komputerach stacjonarnych w popularnych przeglądarkach (Chrome, Firefox, Safari, Edge)."
+    },
+    {
+      "id": "NFR7",
+      "description": "Mechanizm zapobiegania konfliktom rezerwacji musi działać w oparciu o transakcje bazodanowe z blokadą pesymistyczną lub optymistyczną, gwarantując spójność danych przy równoczesnych żądaniach."
+    },
+    {
+      "id": "NFR8",
+      "description": "System powinien rejestrować logi zdarzeń krytycznych (logowanie, zmiany rezerwacji, zmiany uprawnień) z zachowaniem ich przez minimum 12 miesięcy."
+    },
+    {
+      "id": "NFR9",
+      "description": "Czas wysłania powiadomienia e-mail po zdarzeniu (rezerwacja, anulowanie, potwierdzenie) nie powinien przekraczać 60 sekund od momentu wystąpienia zdarzenia."
+    },
+    {
+      "id": "NFR10",
+      "description": "System powinien posiadać architekturę umożliwiającą skalowanie horyzontalne w celu obsługi rosnącej liczby użytkowników bez konieczności przepisywania kodu."
+    },
+    {
+      "id": "NFR11",
+      "description": "Interfejs użytkownika powinien być intuicyjny, a nowy użytkownik powinien być w stanie dokonać rezerwacji wizyty bez dodatkowego szkolenia w czasie nieprzekraczającym 5 minut."
+    },
+    {
+      "id": "NFR12",
+      "description": "System powinien wykonywać automatyczne kopie zapasowe bazy danych co najmniej raz na dobę, a czas przywrócenia systemu z kopii zapasowej nie powinien przekraczać 4 godzin."
+    },
+    {
+      "id": "NFR13",
+      "description": "Dostęp do zasobów systemu musi być kontrolowany na podstawie ról użytkowników, a próby nieautoryzowanego dostępu do zasobów innych ról muszą być blokowane i rejestrowane."
+    },
+    {
+      "id": "NFR14",
+      "description": "System powinien być zaprojektowany w sposób modułowy, umożliwiający dodawanie nowych typów specjalizacji i ról bez konieczności modyfikacji istniejących komponentów."
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US1",
+      "description": "Jako nowy użytkownik chcę zarejestrować konto w systemie podając adres e-mail, hasło i dane osobowe, aby móc korzystać z funkcji rezerwacji wizyt."
+    },
+    {
+      "id": "US2",
+      "description": "Jako zarejestrowany użytkownik chcę zalogować się do systemu przy użyciu adresu e-mail i hasła, aby uzyskać dostęp do funkcji przypisanych do mojej roli."
+    },
+    {
+      "id": "US3",
+      "description": "Jako pacjent chcę przeglądać listę dostępnych terminów wizyt z możliwością filtrowania według specjalizacji, specjalisty, daty i godziny, aby szybko znaleźć odpowiedni termin."
+    },
+    {
+      "id": "US4",
+      "description": "Jako pacjent chcę wyszukać specjalistę po imieniu, nazwisku lub specjalizacji, aby zobaczyć jego profil i dostępne terminy wizyt."
+    },
+    {
+      "id": "US5",
+      "description": "Jako pacjent chcę zarezerwować wybrany termin u wybranego specjalisty, aby potwierdzić swoją wizytę w systemie."
+    },
+    {
+      "id": "US6",
+      "description": "Jako pacjent chcę anulować moją rezerwację wizyty z odpowiednim wyprzedzeniem czasowym, aby zwolnić termin i uniknąć konsekwencji późnego odwołania."
+    },
+    {
+      "id": "US7",
+      "description": "Jako pacjent chcę przeglądać historię moich poprzednich i nadchodzących wizyt wraz z ich statusami, aby mieć pełny wgląd w moje wizyty."
+    },
+    {
+      "id": "US8",
+      "description": "Jako pacjent chcę otrzymać powiadomienie e-mail po dokonaniu, potwierdzeniu lub anulowaniu rezerwacji, aby być na bieżąco informowany o statusie mojej wizyty."
+    },
+    {
+      "id": "US9",
+      "description": "Jako pacjent chcę otrzymać automatyczne przypomnienie e-mail o zbliżającej się wizycie, aby nie zapomnieć o zaplanowanym terminie."
+    },
+    {
+      "id": "US10",
+      "description": "Jako pacjent chcę edytować dane swojego profilu, takie jak numer telefonu, adres e-mail i hasło, aby moje dane kontaktowe były zawsze aktualne."
+    },
+    {
+      "id": "US11",
+      "description": "Jako specjalista chcę zdefiniować mój grafik dostępności, określając dni tygodnia i godziny przyjęć, aby pacjenci mogli rezerwować wizyty tylko w dostępnych terminach."
+    },
+    {
+      "id": "US12",
+      "description": "Jako specjalista chcę zablokować wybrane terminy w moim grafiku, aby uniemożliwić rezerwację w czasie, gdy jestem niedostępny."
+    },
+    {
+      "id": "US13",
+      "description": "Jako specjalista chcę przeglądać listę wszystkich zarezerwowanych wizyt w moim grafiku wraz z danymi pacjentów, aby być przygotowanym na nadchodzące wizyty."
+    },
+    {
+      "id": "US14",
+      "description": "Jako specjalista chcę potwierdzić lub odwołać rezerwację dokonaną przez pacjenta, aby zarządzać moim harmonogramem i informować pacjentów o zmianach."
+    },
+    {
+      "id": "US15",
+      "description": "Jako specjalista chcę otrzymać powiadomienie e-mail o nowej, anulowanej lub zmienionej rezerwacji, aby być na bieżąco informowany o zmianach w moim grafiku."
+    },
+    {
+      "id": "US16",
+      "description": "Jako recepcjonista chcę dokonać rezerwacji wizyty w imieniu pacjenta, aby pomóc osobom, które nie mogą samodzielnie korzystać z systemu."
+    },
+    {
+      "id": "US17",
+      "description": "Jako recepcjonista chcę anulować istniejącą rezerwację pacjenta, aby obsłużyć sytuacje, gdy pacjent zgłasza rezygnację osobiście lub telefonicznie."
+    },
+    {
+      "id": "US18",
+      "description": "Jako recepcjonista chcę zarejestrować nowego pacjenta w systemie, aby umożliwić mu korzystanie z usług rezerwacji wizyt."
+    },
+    {
+      "id": "US19",
+      "description": "Jako recepcjonista chcę przeglądać dostępne terminy wszystkich specjalistów, aby sprawnie odpowiadać na zapytania pacjentów i dokonywać rezerwacji."
+    },
+    {
+      "id": "US20",
+      "description": "Jako administrator chcę zarządzać kontami wszystkich użytkowników, w tym tworzyć, edytować, dezaktywować i usuwać konta, aby utrzymać porządek i bezpieczeństwo w systemie."
+    },
+    {
+      "id": "US21",
+      "description": "Jako administrator chcę przeglądać wszystkie rezerwacje w systemie, aby mieć pełny wgląd w aktywność użytkowników i obłożenie grafików specjalistów."
+    },
+    {
+      "id": "US22",
+      "description": "Jako administrator chcę generować raporty dotyczące obłożenia grafików i aktywności użytkowników, aby podejmować decyzje oparte na danych."
+    },
+    {
+      "id": "US23",
+      "description": "Jako administrator chcę zarządzać kategoriami i specjalizacjami specjalistów oraz przypisywać specjalistów do specjalizacji, aby utrzymać aktualną i spójną strukturę systemu."
+    },
+    {
+      "id": "US24",
+      "description": "Jako administrator chcę anulować dowolną rezerwację w systemie, aby móc reagować na wyjątkowe sytuacje wymagające interwencji administracyjnej."
+    },
+    {
+      "id": "US25",
+      "description": "Jako użytkownik systemu chcę mieć pewność, że wybrany przeze mnie termin zostanie natychmiast zablokowany po dokonaniu rezerwacji, aby uniknąć sytuacji, w której dwie osoby zarezerwują ten sam termin jednocześnie."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "given": "Użytkownik nie posiada konta w systemie i znajduje się na stronie rejestracji",
+      "when": "Użytkownik wypełnia formularz rejestracji podając unikalny adres e-mail, hasło spełniające wymagania bezpieczeństwa oraz dane osobowe (imię, nazwisko) i zatwierdza formularz",
+      "then": "System tworzy nowe konto użytkownika, wysyła e-mail weryfikacyjny na podany adres i wyświetla komunikat o pomyślnej rejestracji"
+    },
+    {
+      "id": "AC2",
+      "given": "Użytkownik posiada aktywne konto w systemie i znajduje się na stronie logowania",
+      "when": "Użytkownik wprowadza poprawny adres e-mail i hasło oraz zatwierdza formularz logowania",
+      "then": "System uwierzytelnia użytkownika, tworzy sesję i przekierowuje go do panelu odpowiedniego dla jego roli"
+    },
+    {
+      "id": "AC3",
+      "given": "Zalogowany pacjent znajduje się na stronie przeglądania terminów wizyt",
+      "when": "Pacjent stosuje filtry według specjalizacji, specjalisty, daty lub godziny",
+      "then": "System wyświetla listę dostępnych terminów spełniających wybrane kryteria filtrowania, posortowanych chronologicznie"
+    },
+    {
+      "id": "AC4",
+      "given": "Zalogowany pacjent znajduje się na stronie wyszukiwania specjalistów",
+      "when": "Pacjent wprowadza imię, nazwisko lub specjalizację specjalisty w pole wyszukiwania i zatwierdza zapytanie",
+      "then": "System wyświetla listę pasujących specjalistów wraz z możliwością przejścia do profilu każdego z nich i podglądu dostępnych terminów"
+    },
+    {
+      "id": "AC5",
+      "given": "Zalogowany pacjent przegląda dostępne terminy i wybrał konkretny termin u wybranego specjalisty",
+      "when": "Pacjent klika przycisk rezerwacji wybranego terminu i potwierdza chęć rezerwacji",
+      "then": "System blokuje wybrany termin, tworzy rezerwację ze statusem oczekującym na potwierdzenie i wyświetla pacjentowi potwierdzenie dokonania rezerwacji"
+    },
+    {
+      "id": "AC6",
+      "given": "Zalogowany pacjent posiada aktywną rezerwację wizyty i czas do wizyty przekracza wymagane minimum wyprzedzenia",
+      "when": "Pacjent wybiera opcję anulowania rezerwacji i potwierdza decyzję",
+      "then": "System zmienia status rezerwacji na anulowaną, zwalnia termin w grafiku specjalisty i wysyła powiadomienia e-mail do pacjenta i specjalisty"
+    },
+    {
+      "id": "AC7",
+      "given": "Zalogowany pacjent znajduje się w swoim panelu użytkownika",
+      "when": "Pacjent przechodzi do sekcji historii wizyt",
+      "then": "System wyświetla listę wszystkich poprzednich i nadchodzących wizyt pacjenta wraz z datą, godziną, nazwiskiem specjalisty i aktualnym statusem każdej wizyty"
+    },
+    {
+      "id": "AC8",
+      "given": "Pacjent dokonał, potwierdził lub anulował rezerwację wizyty",
+      "when": "System przetwarza zmianę statusu rezerwacji",
+      "then": "System automatycznie wysyła e-mail na adres pacjenta zawierający informację o rodzaju zmiany, szczegółach wizyty (data, godzina, specjalista) i aktualnym statusie rezerwacji"
+    },
+    {
+      "id": "AC9",
+      "given": "Pacjent posiada potwierdzoną rezerwację wizyty, a do wizyty pozostał określony czas (np. 24 godziny)",
+      "when": "System wykrywa zbliżający się termin wizyty zgodnie z harmonogramem przypomnień",
+      "then": "System automatycznie wysyła e-mail przypominający pacjentowi o wizycie zawierający datę, godzinę, imię i nazwisko specjalisty oraz lokalizację"
+    },
+    {
+      "id": "AC10",
+      "given": "Zalogowany pacjent znajduje się w sekcji edycji profilu",
+      "when": "Pacjent zmienia numer telefonu, adres e-mail lub hasło i zapisuje zmiany",
+      "then": "System aktualizuje dane profilu pacjenta, w przypadku zmiany e-mail wysyła weryfikację na nowy adres, a w przypadku zmiany hasła wymaga podania aktualnego hasła"
+    },
+    {
+      "id": "AC11",
+      "given": "Zalogowany specjalista znajduje się w panelu zarządzania grafikiem",
+      "when": "Specjalista definiuje dni tygodnia i godziny przyjęć oraz zapisuje grafik dostępności",
+      "then": "System zapisuje grafik specjalisty i udostępnia zdefiniowane terminy pacjentom jako dostępne do rezerwacji"
+    },
+    {
+      "id": "AC12",
+      "given": "Zalogowany specjalista posiada zdefiniowany grafik dostępności",
+      "when": "Specjalista wybiera konkretny termin lub zakres terminów i oznacza je jako zablokowane",
+      "then": "System oznacza wybrane terminy jako niedostępne i uniemożliwia pacjentom dokonanie rezerwacji w tych terminach"
+    },
+    {
+      "id": "AC13",
+      "given": "Zalogowany specjalista znajduje się w panelu zarządzania wizytami",
+      "when": "Specjalista przechodzi do listy zarezerwowanych wizyt",
+      "then": "System wyświetla listę wszystkich zarezerwowanych wizyt w grafiku specjalisty wraz z datą, godziną, imieniem, nazwiskiem i danymi kontaktowymi pacjenta oraz statusem wizyty"
+    },
+    {
+      "id": "AC14",
+      "given": "Zalogowany specjalista posiada rezerwację oczekującą na potwierdzenie lub potwierdzoną",
+      "when": "Specjalista wybiera opcję potwierdzenia lub odwołania konkretnej rezerwacji",
+      "then": "System aktualizuje status rezerwacji, wysyła powiadomienie e-mail do pacjenta o zmianie statusu i aktualizuje grafik specjalisty"
+    },
+    {
+      "id": "AC15",
+      "given": "W systemie nastąpiła zmiana dotycząca rezerwacji w grafiku specjalisty (nowa, anulowana lub zmieniona rezerwacja)",
+      "when": "System przetwarza zmianę rezerwacji",
+      "then": "System automatycznie wysyła e-mail do specjalisty zawierający informację o rodzaju zmiany, danych pacjenta oraz szczegółach wizyty"
+    },
+    {
+      "id": "AC16",
+      "given": "Zalogowany recepcjonista znajduje się w panelu rezerwacji i wybrał pacjenta oraz dostępny termin u specjalisty",
+      "when": "Recepcjonista wypełnia formularz rezerwacji w imieniu pacjenta i zatwierdza go",
+      "then": "System tworzy rezerwację przypisaną do wybranego pacjenta, blokuje termin w grafiku specjalisty i wysyła powiadomienie e-mail do pacjenta i specjalisty"
+    },
+    {
+      "id": "AC17",
+      "given": "Zalogowany recepcjonista wyszukał istniejącą aktywną rezerwację pacjenta",
+      "when": "Recepcjonista wybiera opcję anulowania rezerwacji i potwierdza decyzję",
+      "then": "System zmienia status rezerwacji na anulowaną, zwalnia termin w grafiku specjalisty i wysyła powiadomienia e-mail do pacjenta i specjalisty"
+    },
+    {
+      "id": "AC18",
+      "given": "Zalogowany recepcjonista znajduje się w panelu rejestracji nowego pacjenta",
+      "when": "Recepcjonista wypełnia formularz rejestracji podając dane pacjenta (imię, nazwisko, e-mail, telefon) i zatwierdza formularz",
+      "then": "System tworzy nowe konto pacjenta, wysyła e-mail z danymi dostępowymi na podany adres i wyświetla recepcjoniście potwierdzenie rejestracji"
+    },
+    {
+      "id": "AC19",
+      "given": "Zalogowany recepcjonista znajduje się w panelu przeglądania terminów",
+      "when": "Recepcjonista przegląda dostępne terminy z możliwością filtrowania według specjalisty, specjalizacji i daty",
+      "then": "System wyświetla listę dostępnych terminów wszystkich specjalistów spełniających wybrane kryteria, umożliwiając recepcjoniście szybkie znalezienie odpowiedniego terminu"
+    },
+    {
+      "id": "AC20",
+      "given": "Zalogowany administrator znajduje się w panelu zarządzania użytkownikami",
+      "when": "Administrator tworzy nowe konto, edytuje dane istniejącego konta, dezaktywuje lub usuwa konto użytkownika",
+      "then": "System wykonuje wybraną operację na koncie użytkownika, zapisuje zmiany i wyświetla administratorowi potwierdzenie wykonanej operacji"
+    },
+    {
+      "id": "AC21",
+      "given": "Zalogowany administrator znajduje się w panelu administracyjnym",
+      "when": "Administrator przechodzi do sekcji przeglądania wszystkich rezerwacji z możliwością filtrowania",
+      "then": "System wyświetla listę wszystkich rezerwacji w systemie wraz z danymi pacjenta, specjalisty, datą, godziną i statusem każdej rezerwacji"
+    },
+    {
+      "id": "AC22",
+      "given": "Zalogowany administrator znajduje się w sekcji raportów",
+      "when": "Administrator wybiera typ raportu (obłożenie grafików lub aktywność użytkowników), określa zakres dat i generuje raport",
+      "then": "System generuje raport zawierający żądane dane statystyczne w czytelnej formie z możliwością eksportu do pliku"
+    },
+    {
+      "id": "AC23",
+      "given": "Zalogowany administrator znajduje się w panelu zarządzania specjalizacjami",
+      "when": "Administrator dodaje nową kategorię lub specjalizację, edytuje istniejącą lub przypisuje specjalistę do specjalizacji",
+      "then": "System zapisuje zmiany w strukturze specjalizacji, aktualizuje profile specjalistów i odzwierciedla zmiany w wynikach wyszukiwania dostępnych dla pacjentów"
+    },
+    {
+      "id": "AC24",
+      "given": "Zalogowany administrator wyszukał dowolną aktywną rezerwację w systemie",
+      "when": "Administrator wybiera opcję anulowania rezerwacji, podaje powód i potwierdza decyzję",
+      "then": "System zmienia status rezerwacji na anulowaną, zwalnia termin w grafiku specjalisty i wysyła powiadomienia e-mail do pacjenta i specjalisty z informacją o anulowaniu przez administratora"
+    },
+    {
+      "id": "AC25",
+      "given": "Dwóch użytkowników jednocześnie próbuje zarezerwować ten sam termin u tego samego specjalisty",
+      "when": "Obaj użytkownicy niemal równocześnie zatwierdzają formularz rezerwacji tego samego terminu",
+      "then": "System przyznaje rezerwację tylko jednemu użytkownikowi (temu, którego żądanie zostało przetworzone jako pierwsze), blokuje termin natychmiast po pierwszej rezerwacji i zwraca drugiemu użytkownikowi komunikat o niedostępności wybranego terminu"
+    }
+  ],
+  "metadata": {
+    "version": "llm",
+    "case_study": "appointment-booking",
+    "model_used": "claude-sonnet-4-6",
+    "prompt_log": "[SYSTEM]\nJesteś analitykiem wymagań. Odpowiadaj WYŁĄCZNIE poprawnym JSON.\nŻadnego Markdown ani komentarzy.\n\n[KROK1]\nOpis systemu: System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzają swoim grafikiem. System powinien zapobiegać konfliktom rezerwacji i obsługiwać różne role użytkowników.\n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"roles\": [\n    {\"name\": \"NazwaRoli\", \"permissions\": [\"uprawnienie1\", \"uprawnienie2\"]}\n  ],\n  \"functional_requirements\": [\n    {\"id\": \"FR1\", \"description\": \"Treść wymagania.\"}\n  ]\n}\n\n[KROK2]\nOpis systemu: System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzają swoim grafikiem. System powinien zapobiegać konfliktom rezerwacji i obsługiwać różne role użytkowników.\nWygenerowane FR: {\"roles\": [{\"name\": \"Pacjent\", \"permissions\": [\"przeglądanie dostępnych terminów\", \"dokonywanie rezerwacji wizyty\", \"anulowanie własnej rezerwacji\", \"przeglądanie historii własnych rezerwacji\", \"zarządzanie własnym profilem\"]}, {\"name\": \"Specjalista\", \"permissions\": [\"zarządzanie własnym grafikiem\", \"przeglądanie listy własnych rezerwacji\", \"potwierdzanie rezerwacji\", \"odwoływanie wizyt\", \"blokowanie terminów w grafiku\", \"przeglądanie danych pacjentów przypisanych do wizyt\", \"zarządzanie własnym profilem\"]}, {\"name\": \"Administrator\", \"permissions\": [\"zarządzanie kontami użytkowników\", \"zarządzanie kontami specjalistów\", \"przeglądanie wszystkich rezerwacji\", \"anulowanie dowolnej rezerwacji\", \"generowanie raportów systemowych\", \"konfiguracja systemu\", \"zarządzanie kategoriami specjalistów\"]}, {\"name\": \"Recepcjonista\", \"permissions\": [\"przeglądanie dostępnych terminów wszystkich specjalistów\", \"dokonywanie rezerwacji w imieniu pacjenta\", \"anulowanie rezerwacji pacjenta\", \"przeglądanie listy rezerwacji\", \"rejestrowanie nowych pacjentów\"]}], \"functional_requirements\": [{\"id\": \"FR1\", \"description\": \"System umożliwia rejestrację nowych użytkowników z przypisaniem odpowiedniej roli (Pacjent, Specjalista, Recepcjonista, Administrator).\"}, {\"id\": \"FR2\", \"description\": \"System umożliwia logowanie użytkowników za pomocą adresu e-mail i hasła oraz weryfikuje ich tożsamość przed przyznaniem dostępu.\"}, {\"id\": \"FR3\", \"description\": \"System wyświetla listę dostępnych terminów wizyt z możliwością filtrowania według specjalisty, daty, godziny oraz specjalizacji.\"}, {\"id\": \"FR4\", \"description\": \"System umożliwia pacjentowi dokonanie rezerwacji wybranego terminu u wybranego specjalisty.\"}, {\"id\": \"FR5\", \"description\": \"System zapobiega konfliktom rezerwacji poprzez blokowanie terminu natychmiast po jego zarezerwowaniu, uniemożliwiając równoczesną rezerwację tego samego terminu przez dwóch użytkowników.\"}, {\"id\": \"FR6\", \"description\": \"System umożliwia pacjentowi anulowanie własnej rezerwacji z zachowaniem określonego limitu czasowego przed planowaną wizytą.\"}, {\"id\": \"FR7\", \"description\": \"System wysyła powiadomienia e-mail do pacjenta i specjalisty po dokonaniu, potwierdzeniu lub anulowaniu rezerwacji.\"}, {\"id\": \"FR8\", \"description\": \"System wysyła automatyczne przypomnienia o zbliżającej się wizycie do pacjenta i specjalisty w określonym czasie przed wizytą.\"}, {\"id\": \"FR9\", \"description\": \"Specjalista może definiować swój grafik dostępności, określając dostępne dni i godziny przyjęć.\"}, {\"id\": \"FR10\", \"description\": \"Specjalista może blokować wybrane terminy w swoim grafiku, czyniąc je niedostępnymi dla rezerwacji.\"}, {\"id\": \"FR11\", \"description\": \"Specjalista może przeglądać listę wszystkich zarezerwowanych wizyt w swoim grafiku wraz z danymi pacjentów.\"}, {\"id\": \"FR12\", \"description\": \"Specjalista może potwierdzić lub odwołać rezerwację dokonaną przez pacjenta, a system powiadamia pacjenta o zmianie statusu.\"}, {\"id\": \"FR13\", \"description\": \"Pacjent może przeglądać historię swoich poprzednich i nadchodzących wizyt wraz z ich statusami.\"}, {\"id\": \"FR14\", \"description\": \"Recepcjonista może dokonywać rezerwacji wizyt w imieniu pacjenta oraz anulować istniejące rezerwacje.\"}, {\"id\": \"FR15\", \"description\": \"Administrator może zarządzać kontami wszystkich użytkowników, w tym tworzyć, edytować, dezaktywować i usuwać konta.\"}, {\"id\": \"FR16\", \"description\": \"Administrator może przeglądać wszystkie rezerwacje w systemie oraz generować raporty dotyczące obłożenia grafików i aktywności użytkowników.\"}, {\"id\": \"FR17\", \"description\": \"System umożliwia zarządzanie kategoriami i specjalizacjami specjalistów, pozwalając na przypisanie specjalisty do jednej lub wielu specjalizacji.\"}, {\"id\": \"FR18\", \"description\": \"System rejestruje historię zmian statusów rezerwacji wraz z informacją o użytkowniku dokonującym zmiany i znacznikiem czasowym.\"}, {\"id\": \"FR19\", \"description\": \"System umożliwia użytkownikowi edycję danych własnego profilu, takich jak dane kontaktowe i hasło.\"}, {\"id\": \"FR20\", \"description\": \"System obsługuje wyszukiwanie specjalistów według imienia, nazwiska lub specjalizacji i wyświetla ich profile z dostępnymi terminami.\"}]}\n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"non_functional_requirements\": [\n    {\"id\": \"NFR1\", \"description\": \"Treść wymagania.\"}\n  ],\n  \"user_stories\": [\n    {\"id\": \"US1\", \"description\": \"Jako X chcę Y, aby Z.\"}\n  ]\n}\n\n[KROK3]\nUser stories: [{\"id\": \"US1\", \"description\": \"Jako nowy użytkownik chcę zarejestrować konto w systemie podając adres e-mail, hasło i dane osobowe, aby móc korzystać z funkcji rezerwacji wizyt.\"}, {\"id\": \"US2\", \"description\": \"Jako zarejestrowany użytkownik chcę zalogować się do systemu przy użyciu adresu e-mail i hasła, aby uzyskać dostęp do funkcji przypisanych do mojej roli.\"}, {\"id\": \"US3\", \"description\": \"Jako pacjent chcę przeglądać listę dostępnych terminów wizyt z możliwością filtrowania według specjalizacji, specjalisty, daty i godziny, aby szybko znaleźć odpowiedni termin.\"}, {\"id\": \"US4\", \"description\": \"Jako pacjent chcę wyszukać specjalistę po imieniu, nazwisku lub specjalizacji, aby zobaczyć jego profil i dostępne terminy wizyt.\"}, {\"id\": \"US5\", \"description\": \"Jako pacjent chcę zarezerwować wybrany termin u wybranego specjalisty, aby potwierdzić swoją wizytę w systemie.\"}, {\"id\": \"US6\", \"description\": \"Jako pacjent chcę anulować moją rezerwację wizyty z odpowiednim wyprzedzeniem czasowym, aby zwolnić termin i uniknąć konsekwencji późnego odwołania.\"}, {\"id\": \"US7\", \"description\": \"Jako pacjent chcę przeglądać historię moich poprzednich i nadchodzących wizyt wraz z ich statusami, aby mieć pełny wgląd w moje wizyty.\"}, {\"id\": \"US8\", \"description\": \"Jako pacjent chcę otrzymać powiadomienie e-mail po dokonaniu, potwierdzeniu lub anulowaniu rezerwacji, aby być na bieżąco informowany o statusie mojej wizyty.\"}, {\"id\": \"US9\", \"description\": \"Jako pacjent chcę otrzymać automatyczne przypomnienie e-mail o zbliżającej się wizycie, aby nie zapomnieć o zaplanowanym terminie.\"}, {\"id\": \"US10\", \"description\": \"Jako pacjent chcę edytować dane swojego profilu, takie jak numer telefonu, adres e-mail i hasło, aby moje dane kontaktowe były zawsze aktualne.\"}, {\"id\": \"US11\", \"description\": \"Jako specjalista chcę zdefiniować mój grafik dostępności, określając dni tygodnia i godziny przyjęć, aby pacjenci mogli rezerwować wizyty tylko w dostępnych terminach.\"}, {\"id\": \"US12\", \"description\": \"Jako specjalista chcę zablokować wybrane terminy w moim grafiku, aby uniemożliwić rezerwację w czasie, gdy jestem niedostępny.\"}, {\"id\": \"US13\", \"description\": \"Jako specjalista chcę przeglądać listę wszystkich zarezerwowanych wizyt w moim grafiku wraz z danymi pacjentów, aby być przygotowanym na nadchodzące wizyty.\"}, {\"id\": \"US14\", \"description\": \"Jako specjalista chcę potwierdzić lub odwołać rezerwację dokonaną przez pacjenta, aby zarządzać moim harmonogramem i informować pacjentów o zmianach.\"}, {\"id\": \"US15\", \"description\": \"Jako specjalista chcę otrzymać powiadomienie e-mail o nowej, anulowanej lub zmienionej rezerwacji, aby być na bieżąco informowany o zmianach w moim grafiku.\"}, {\"id\": \"US16\", \"description\": \"Jako recepcjonista chcę dokonać rezerwacji wizyty w imieniu pacjenta, aby pomóc osobom, które nie mogą samodzielnie korzystać z systemu.\"}, {\"id\": \"US17\", \"description\": \"Jako recepcjonista chcę anulować istniejącą rezerwację pacjenta, aby obsłużyć sytuacje, gdy pacjent zgłasza rezygnację osobiście lub telefonicznie.\"}, {\"id\": \"US18\", \"description\": \"Jako recepcjonista chcę zarejestrować nowego pacjenta w systemie, aby umożliwić mu korzystanie z usług rezerwacji wizyt.\"}, {\"id\": \"US19\", \"description\": \"Jako recepcjonista chcę przeglądać dostępne terminy wszystkich specjalistów, aby sprawnie odpowiadać na zapytania pacjentów i dokonywać rezerwacji.\"}, {\"id\": \"US20\", \"description\": \"Jako administrator chcę zarządzać kontami wszystkich użytkowników, w tym tworzyć, edytować, dezaktywować i usuwać konta, aby utrzymać porządek i bezpieczeństwo w systemie.\"}, {\"id\": \"US21\", \"description\": \"Jako administrator chcę przeglądać wszystkie rezerwacje w systemie, aby mieć pełny wgląd w aktywność użytkowników i obłożenie grafików specjalistów.\"}, {\"id\": \"US22\", \"description\": \"Jako administrator chcę generować raporty dotyczące obłożenia grafików i aktywności użytkowników, aby podejmować decyzje oparte na danych.\"}, {\"id\": \"US23\", \"description\": \"Jako administrator chcę zarządzać kategoriami i specjalizacjami specjalistów oraz przypisywać specjalistów do specjalizacji, aby utrzymać aktualną i spójną strukturę systemu.\"}, {\"id\": \"US24\", \"description\": \"Jako administrator chcę anulować dowolną rezerwację w systemie, aby móc reagować na wyjątkowe sytuacje wymagające interwencji administracyjnej.\"}, {\"id\": \"US25\", \"description\": \"Jako użytkownik systemu chcę mieć pewność, że wybrany przeze mnie termin zostanie natychmiast zablokowany po dokonaniu rezerwacji, aby uniknąć sytuacji, w której dwie osoby zarezerwują ten sam termin jednocześnie.\"}]\n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"acceptance_criteria\": [\n    {\n      \"id\": \"AC1\",\n      \"given\": \"warunek wstępny\",\n      \"when\": \"akcja użytkownika\",\n      \"then\": \"oczekiwany rezultat\"\n    }\n  ]\n}",
+    "human_changes": null,
+    "score": null
+  }
+}

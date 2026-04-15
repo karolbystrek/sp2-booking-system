@@ -1,0 +1,5 @@
+{
+  "appointment-booking": "System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzają swoim grafikiem. System powinien zapobiegać konfliktom rezerwacji i obsługiwać różne role użytkowników.",
+  "helpdesk-ticketing": "System do zarządzania zgłoszeniami użytkowników. Użytkownicy mogą tworzyć zgłoszenia, które są obsługiwane przez agentów. Zgłoszenia mają statusy i mogą być przypisywane do różnych osób. System powinien umożliwiać śledzenie historii oraz komunikację między użytkownikiem a agentem.",
+  "file-storage-api": "System udostępnia API do przesyłania, pobierania i usuwania plików. Użytkownicy powinni mieć dostęp tylko do swoich plików. System powinien być skalowalny i bezpieczny."
+}
