@@ -28,7 +28,7 @@ class BookingService:
             raise BookingError(str(e))
 
         active_bookings = self.repo.get_user_active_bookings(user_id)
-        if len(active_bookings) >= 3:
+        if len(active_bookings) > 3:
             self.audit_service.log_booking_rejected(
                 user_id, slot_id, "User reached booking limit"
             )
