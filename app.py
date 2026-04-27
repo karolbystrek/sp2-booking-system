@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 
-from models import Slot, SlotStatus
+from audit_service import AuditService
+from booking_service import BookingError, BookingService
+from models import Slot
 from repository import InMemoryRepository
-from services import BookingService, BookingError
+from schedule_service import ScheduleService
 
 MENU = """
 === Appointment Booking System ===
@@ -10,7 +12,8 @@ MENU = """
 2. Book a slot
 3. Cancel a booking
 4. View my bookings
-5. Exit
+5. View audit log
+6. Exit
 """
 
 
@@ -84,22 +87,38 @@ def cancel_booking(service, user_id):
         print(f"  Error: {e}")
 
 
-def view_my_bookings(repo, user_id):
-    bookings = [b for b in repo.bookings.values() if b.user_id == user_id]
+def view_my_bookings(service, user_id):
+    bookings = service.get_user_bookings(user_id)
     if not bookings:
         print("No bookings found.")
         return
     for b in bookings:
-        slot = repo.get_slot(b.slot_id)
+        slot = service.repo.get_slot(b.slot_id)
         slot_info = f"{slot.start_time:%Y-%m-%d %H:%M}" if slot else "unknown"
         print(
             f"  Booking {b.id}: slot={b.slot_id} ({slot_info}), status={b.status.value}"
         )
 
 
+def view_audit_log(audit_service):
+    events = audit_service.get_audit_log()
+    if not events:
+        print("No audit events found.")
+        return
+    for event in events:
+        print(
+            "  "
+            f"{event.id}: {event.timestamp:%Y-%m-%d %H:%M:%S} "
+            f"{event.event_type} user={event.user_id} "
+            f"slot={event.slot_id} details={event.details}"
+        )
+
+
 def main():
     repo = InMemoryRepository()
-    service = BookingService(repo)
+    schedule_service = ScheduleService(repo)
+    audit_service = AuditService(repo)
+    service = BookingService(repo, schedule_service, audit_service)
     seed_slots(repo)
 
     user_id = read_int("Enter your user ID: ")
@@ -120,8 +139,10 @@ def main():
         elif choice == "3":
             cancel_booking(service, user_id)
         elif choice == "4":
-            view_my_bookings(repo, user_id)
+            view_my_bookings(service, user_id)
         elif choice == "5":
+            view_audit_log(audit_service)
+        elif choice == "6":
             print("Goodbye.")
             break
         else:

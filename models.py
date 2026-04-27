@@ -6,7 +6,7 @@ from enum import Enum
 class SlotStatus(str, Enum):
     AVAILABLE = "AVAILABLE"
     BOOKED = "BOOKED"
-    CANCELLED = "CANCELLED"
+    BLOCKED = "BLOCKED"
     COMPLETED = "COMPLETED"
 
 
@@ -31,3 +31,13 @@ class Booking:
     slot_id: int
     status: BookingStatus
     created_at: datetime
+
+
+@dataclass
+class AuditEvent:
+    id: int
+    event_type: str
+    user_id: int
+    slot_id: int
+    timestamp: datetime
+    details: str = ""
