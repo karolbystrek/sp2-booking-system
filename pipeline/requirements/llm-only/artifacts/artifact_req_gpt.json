@@ -1,0 +1,243 @@
+{
+  "system_goal": "System umożliwia użytkownikom rezerwację, przeglądanie i anulowanie wizyt u specjalistów oraz wspiera specjalistów w zarządzaniu grafikiem. Celem systemu jest bezpieczna i skalowalna obsługa terminów, rezerwacji i zmian harmonogramu przy uwzględnieniu ról użytkowników, ograniczeń czasowych oraz wyjątków od konfliktów rezerwacji.",
+  "roles": [
+    {
+      "name": "Użytkownik",
+      "permissions": [
+        "przeglądanie dostępnych terminów",
+        "dokonywanie rezerwacji wizyt",
+        "anulowanie własnych rezerwacji w dozwolonych warunkach"
+      ]
+    },
+    {
+      "name": "Specjalista",
+      "permissions": [
+        "zarządzanie własnym grafikiem",
+        "modyfikowanie dostępnych terminów",
+        "modyfikowanie grafiku także dla istniejących rezerwacji",
+        "przeglądanie rezerwacji dotyczących własnego grafiku"
+      ]
+    },
+    {
+      "name": "Administrator",
+      "permissions": [
+        "zarządzanie rolami użytkowników",
+        "konfiguracja zasad rezerwacji i anulowania",
+        "obsługa wyjątków od konfliktów rezerwacji",
+        "nadzór nad skalowalnością i poprawnym działaniem systemu"
+      ]
+    }
+  ],
+  "functional_requirements": [
+    {
+      "id": "FR1",
+      "description": "System musi umożliwiać użytkownikowi przeglądanie dostępnych terminów wizyt u specjalistów."
+    },
+    {
+      "id": "FR2",
+      "description": "System musi umożliwiać użytkownikowi dokonanie rezerwacji wybranego dostępnego terminu."
+    },
+    {
+      "id": "FR3",
+      "description": "System musi umożliwiać użytkownikowi anulowanie własnej rezerwacji, jeśli spełnione są obowiązujące warunki anulowania."
+    },
+    {
+      "id": "FR4",
+      "description": "System musi umożliwiać definiowanie i egzekwowanie ograniczeń czasowych dotyczących anulowania wizyt."
+    },
+    {
+      "id": "FR5",
+      "description": "System musi zapobiegać konfliktom rezerwacji dla tego samego specjalisty i terminu."
+    },
+    {
+      "id": "FR6",
+      "description": "System musi umożliwiać obsługę wyjątków od standardowych reguł konfliktu rezerwacji w określonych przypadkach."
+    },
+    {
+      "id": "FR7",
+      "description": "System musi umożliwiać specjaliście zarządzanie własnym grafikiem, w tym dodawanie, usuwanie i zmianę dostępnych terminów."
+    },
+    {
+      "id": "FR8",
+      "description": "System musi umożliwiać specjaliście modyfikowanie grafiku także wtedy, gdy istnieją już powiązane rezerwacje."
+    },
+    {
+      "id": "FR9",
+      "description": "System musi obsługiwać różne role użytkowników oraz przypisane im uprawnienia."
+    },
+    {
+      "id": "FR10",
+      "description": "System musi być skalowalny i wspierać rosnącą liczbę użytkowników, specjalistów, grafików i rezerwacji."
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR1",
+      "description": "System powinien zapewniać wysoką dostępność funkcji przeglądania terminów, rezerwacji, anulowania i zarządzania grafikiem."
+    },
+    {
+      "id": "NFR2",
+      "description": "System powinien zapewniać spójność danych i odporność na współbieżne próby rezerwacji tego samego terminu."
+    },
+    {
+      "id": "NFR3",
+      "description": "System powinien skalować się wraz ze wzrostem liczby użytkowników, specjalistów, grafików i rezerwacji bez istotnego pogorszenia wydajności."
+    },
+    {
+      "id": "NFR4",
+      "description": "System powinien egzekwować kontrolę dostępu opartą na rolach użytkowników zgodnie z przypisanymi uprawnieniami."
+    },
+    {
+      "id": "NFR5",
+      "description": "System powinien zapewniać bezpieczeństwo danych użytkowników i rezerwacji, w tym ochronę przed nieautoryzowanym dostępem."
+    },
+    {
+      "id": "NFR6",
+      "description": "System powinien rejestrować operacje związane z rezerwacjami, anulowaniami, wyjątkami konfliktów oraz zmianami grafiku w celu audytu i rozliczalności."
+    },
+    {
+      "id": "NFR7",
+      "description": "System powinien być projektowany w sposób umożliwiający łatwą konfigurację zasad anulowania, wyjątków od konfliktów oraz uprawnień ról."
+    },
+    {
+      "id": "NFR8",
+      "description": "System powinien zapewniać czytelny i intuicyjny interfejs dla użytkowników, specjalistów i administratorów."
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US1",
+      "description": "Jako użytkownik chcę przeglądać dostępne terminy u specjalistów, aby wybrać dogodny termin wizyty."
+    },
+    {
+      "id": "US2",
+      "description": "Jako użytkownik chcę zarezerwować dostępny termin wizyty, aby umówić spotkanie ze specjalistą."
+    },
+    {
+      "id": "US3",
+      "description": "Jako użytkownik chcę anulować własną rezerwację w dozwolonych warunkach, aby móc zrezygnować z wizyty, gdy jest to uzasadnione."
+    },
+    {
+      "id": "US4",
+      "description": "Jako użytkownik chcę otrzymać informację o ograniczeniach anulowania, aby wiedzieć, czy mogę jeszcze odwołać wizytę."
+    },
+    {
+      "id": "US5",
+      "description": "Jako specjalista chcę zarządzać własnym grafikiem, aby udostępniać i aktualizować terminy wizyt."
+    },
+    {
+      "id": "US6",
+      "description": "Jako specjalista chcę modyfikować grafik także dla istniejących rezerwacji, aby dostosować harmonogram do zmian organizacyjnych."
+    },
+    {
+      "id": "US7",
+      "description": "Jako specjalista chcę przeglądać rezerwacje dotyczące mojego grafiku, aby zarządzać zaplanowanymi wizytami."
+    },
+    {
+      "id": "US8",
+      "description": "Jako administrator chcę zarządzać rolami i uprawnieniami użytkowników, aby kontrolować dostęp do funkcji systemu."
+    },
+    {
+      "id": "US9",
+      "description": "Jako administrator chcę konfigurować zasady rezerwacji i anulowania, aby dostosować działanie systemu do polityki organizacji."
+    },
+    {
+      "id": "US10",
+      "description": "Jako administrator chcę obsługiwać wyjątki od konfliktów rezerwacji, aby umożliwiać niestandardowe przypadki zgodnie z obowiązującymi zasadami."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "given": "użytkownik jest na ekranie przeglądania terminów i w systemie istnieją opublikowane wolne terminy specjalistów",
+      "when": "użytkownik wyświetla listę dostępnych terminów",
+      "then": "system pokazuje dostępne terminy wraz z informacją o specjaliście, dacie i godzinie wizyty"
+    },
+    {
+      "id": "AC2",
+      "given": "użytkownik przegląda dostępne terminy specjalistów",
+      "when": "użytkownik wybiera kryteria wyszukiwania lub filtrowania terminów",
+      "then": "system ogranicza widok do terminów spełniających wybrane kryteria"
+    },
+    {
+      "id": "AC3",
+      "given": "użytkownik jest zalogowany i wybrany termin jest nadal dostępny do rezerwacji",
+      "when": "użytkownik potwierdza rezerwację terminu wizyty",
+      "then": "system tworzy rezerwację i oznacza termin jako zarezerwowany"
+    },
+    {
+      "id": "AC4",
+      "given": "użytkownik próbuje zarezerwować termin, który został już zajęty lub przestał być dostępny",
+      "when": "użytkownik wysyła żądanie rezerwacji",
+      "then": "system odrzuca rezerwację i informuje użytkownika o braku dostępności terminu"
+    },
+    {
+      "id": "AC5",
+      "given": "użytkownik ma własną aktywną rezerwację i spełnione są skonfigurowane warunki anulowania",
+      "when": "użytkownik anuluje rezerwację",
+      "then": "system usuwa rezerwację lub oznacza ją jako anulowaną oraz ponownie udostępnia termin zgodnie z konfiguracją"
+    },
+    {
+      "id": "AC6",
+      "given": "użytkownik ma własną rezerwację, ale nie są spełnione skonfigurowane warunki anulowania",
+      "when": "użytkownik próbuje anulować rezerwację",
+      "then": "system blokuje anulowanie i wyświetla informację o obowiązujących ograniczeniach"
+    },
+    {
+      "id": "AC7",
+      "given": "użytkownik przegląda szczegóły własnej rezerwacji lub rozpoczyna proces anulowania",
+      "when": "system ocenia zasady anulowania dla tej rezerwacji",
+      "then": "system pokazuje, czy anulowanie jest możliwe oraz jakie ograniczenia lub terminy obowiązują"
+    },
+    {
+      "id": "AC8",
+      "given": "specjalista jest zalogowany i posiada uprawnienia do zarządzania własnym grafikiem",
+      "when": "specjalista dodaje nowy termin dostępności do swojego grafiku",
+      "then": "system zapisuje termin i udostępnia go użytkownikom jako możliwy do rezerwacji, jeśli nie narusza reguł konfliktów"
+    },
+    {
+      "id": "AC9",
+      "given": "specjalista jest zalogowany i posiada istniejące terminy w swoim grafiku bez aktywnych rezerwacji",
+      "when": "specjalista modyfikuje lub usuwa wybrany termin",
+      "then": "system aktualizuje grafik zgodnie ze zmianą, jeśli operacja nie narusza skonfigurowanych zasad"
+    },
+    {
+      "id": "AC10",
+      "given": "specjalista jest zalogowany i wybrany termin w jego grafiku ma istniejącą rezerwację",
+      "when": "specjalista modyfikuje ten termin w zakresie dozwolonym przez system",
+      "then": "system zapisuje zmianę zgodnie z obowiązującymi zasadami oraz odpowiednio aktualizuje powiązaną rezerwację lub jej status"
+    },
+    {
+      "id": "AC11",
+      "given": "specjalista jest zalogowany i posiada terminy z przypisanymi rezerwacjami",
+      "when": "specjalista otwiera widok rezerwacji dotyczących swojego grafiku",
+      "then": "system pokazuje listę rezerwacji powiązanych wyłącznie z grafikiem tego specjalisty"
+    },
+    {
+      "id": "AC12",
+      "given": "administrator jest zalogowany i posiada uprawnienia do zarządzania rolami oraz uprawnieniami",
+      "when": "administrator przypisuje, zmienia lub odbiera rolę albo uprawnienie użytkownikowi",
+      "then": "system zapisuje zmianę i stosuje nowe uprawnienia przy kolejnych operacjach użytkownika"
+    },
+    {
+      "id": "AC13",
+      "given": "administrator jest zalogowany i posiada uprawnienia do konfiguracji zasad systemowych",
+      "when": "administrator definiuje lub zmienia zasady rezerwacji oraz anulowania",
+      "then": "system zapisuje konfigurację i stosuje ją do nowych prób rezerwacji oraz anulowania"
+    },
+    {
+      "id": "AC14",
+      "given": "występuje konflikt rezerwacji lub konflikt wynikający z reguł harmonogramu oraz administrator ma odpowiednie uprawnienia",
+      "when": "administrator zatwierdza wyjątek zgodnie z obowiązującymi zasadami organizacji",
+      "then": "system pozwala na realizację operacji mimo standardowego konfliktu i zapisuje informację o zastosowanym wyjątku"
+    }
+  ],
+  "metadata": {
+    "version": "llm",
+    "case_study": "appointment-booking",
+    "model_used": "gpt-5.4",
+    "prompt_log": "[SYSTEM]\nJesteś analitykiem wymagań. Odpowiadaj WYŁĄCZNIE poprawnym JSON.\nŻadnego Markdown ani komentarzy.\n\n[KROK1]\nOpis systemu: System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzają swoim grafikiem. System powinien zapobiegać konfliktom rezerwacji, ale w niektórych przypadkach dopuszczalne są wyjątki. Użytkownik może anulować wizytę w uzasadnionych przypadkach, jednak anulowanie może być ograniczone czasowo. Specjalista może modyfikować swój grafik, także dla już istniejących rezerwacji. System powinien obsługiwać różne role użytkowników i być skalowalny. \n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"system_goal\": \"Zwięzły, spójny opis celu systemu (1-3 zdania).\",\n  \"roles\": [\n    {\"name\": \"NazwaRoli\", \"permissions\": [\"uprawnienie1\", \"uprawnienie2\"]}\n  ],\n  \"functional_requirements\": [\n    {\"id\": \"FR1\", \"description\": \"Treść wymagania.\"}\n  ]\n}\n\n[KROK2]\nOpis systemu: System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzają swoim grafikiem. System powinien zapobiegać konfliktom rezerwacji, ale w niektórych przypadkach dopuszczalne są wyjątki. Użytkownik może anulować wizytę w uzasadnionych przypadkach, jednak anulowanie może być ograniczone czasowo. Specjalista może modyfikować swój grafik, także dla już istniejących rezerwacji. System powinien obsługiwać różne role użytkowników i być skalowalny. \nWygenerowane FR: {\"system_goal\": \"System umożliwia użytkownikom rezerwację, przeglądanie i anulowanie wizyt u specjalistów oraz wspiera specjalistów w zarządzaniu grafikiem. Celem systemu jest bezpieczna i skalowalna obsługa terminów, rezerwacji i zmian harmonogramu przy uwzględnieniu ról użytkowników, ograniczeń czasowych oraz wyjątków od konfliktów rezerwacji.\", \"roles\": [{\"name\": \"Użytkownik\", \"permissions\": [\"przeglądanie dostępnych terminów\", \"dokonywanie rezerwacji wizyt\", \"anulowanie własnych rezerwacji w dozwolonych warunkach\"]}, {\"name\": \"Specjalista\", \"permissions\": [\"zarządzanie własnym grafikiem\", \"modyfikowanie dostępnych terminów\", \"modyfikowanie grafiku także dla istniejących rezerwacji\", \"przeglądanie rezerwacji dotyczących własnego grafiku\"]}, {\"name\": \"Administrator\", \"permissions\": [\"zarządzanie rolami użytkowników\", \"konfiguracja zasad rezerwacji i anulowania\", \"obsługa wyjątków od konfliktów rezerwacji\", \"nadzór nad skalowalnością i poprawnym działaniem systemu\"]}], \"functional_requirements\": [{\"id\": \"FR1\", \"description\": \"System musi umożliwiać użytkownikowi przeglądanie dostępnych terminów wizyt u specjalistów.\"}, {\"id\": \"FR2\", \"description\": \"System musi umożliwiać użytkownikowi dokonanie rezerwacji wybranego dostępnego terminu.\"}, {\"id\": \"FR3\", \"description\": \"System musi umożliwiać użytkownikowi anulowanie własnej rezerwacji, jeśli spełnione są obowiązujące warunki anulowania.\"}, {\"id\": \"FR4\", \"description\": \"System musi umożliwiać definiowanie i egzekwowanie ograniczeń czasowych dotyczących anulowania wizyt.\"}, {\"id\": \"FR5\", \"description\": \"System musi zapobiegać konfliktom rezerwacji dla tego samego specjalisty i terminu.\"}, {\"id\": \"FR6\", \"description\": \"System musi umożliwiać obsługę wyjątków od standardowych reguł konfliktu rezerwacji w określonych przypadkach.\"}, {\"id\": \"FR7\", \"description\": \"System musi umożliwiać specjaliście zarządzanie własnym grafikiem, w tym dodawanie, usuwanie i zmianę dostępnych terminów.\"}, {\"id\": \"FR8\", \"description\": \"System musi umożliwiać specjaliście modyfikowanie grafiku także wtedy, gdy istnieją już powiązane rezerwacje.\"}, {\"id\": \"FR9\", \"description\": \"System musi obsługiwać różne role użytkowników oraz przypisane im uprawnienia.\"}, {\"id\": \"FR10\", \"description\": \"System musi być skalowalny i wspierać rosnącą liczbę użytkowników, specjalistów, grafików i rezerwacji.\"}]}\n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"non_functional_requirements\": [\n    {\"id\": \"NFR1\", \"description\": \"Treść wymagania.\"}\n  ],\n  \"user_stories\": [\n    {\"id\": \"US1\", \"description\": \"Jako X chcę Y, aby Z.\"}\n  ]\n}\n\n[KROK3]\nUser stories: [{\"id\": \"US1\", \"description\": \"Jako użytkownik chcę przeglądać dostępne terminy u specjalistów, aby wybrać dogodny termin wizyty.\"}, {\"id\": \"US2\", \"description\": \"Jako użytkownik chcę zarezerwować dostępny termin wizyty, aby umówić spotkanie ze specjalistą.\"}, {\"id\": \"US3\", \"description\": \"Jako użytkownik chcę anulować własną rezerwację w dozwolonych warunkach, aby móc zrezygnować z wizyty, gdy jest to uzasadnione.\"}, {\"id\": \"US4\", \"description\": \"Jako użytkownik chcę otrzymać informację o ograniczeniach anulowania, aby wiedzieć, czy mogę jeszcze odwołać wizytę.\"}, {\"id\": \"US5\", \"description\": \"Jako specjalista chcę zarządzać własnym grafikiem, aby udostępniać i aktualizować terminy wizyt.\"}, {\"id\": \"US6\", \"description\": \"Jako specjalista chcę modyfikować grafik także dla istniejących rezerwacji, aby dostosować harmonogram do zmian organizacyjnych.\"}, {\"id\": \"US7\", \"description\": \"Jako specjalista chcę przeglądać rezerwacje dotyczące mojego grafiku, aby zarządzać zaplanowanymi wizytami.\"}, {\"id\": \"US8\", \"description\": \"Jako administrator chcę zarządzać rolami i uprawnieniami użytkowników, aby kontrolować dostęp do funkcji systemu.\"}, {\"id\": \"US9\", \"description\": \"Jako administrator chcę konfigurować zasady rezerwacji i anulowania, aby dostosować działanie systemu do polityki organizacji.\"}, {\"id\": \"US10\", \"description\": \"Jako administrator chcę obsługiwać wyjątki od konfliktów rezerwacji, aby umożliwiać niestandardowe przypadki zgodnie z obowiązującymi zasadami.\"}]\n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"acceptance_criteria\": [\n    {\n      \"id\": \"AC1\",\n      \"given\": \"warunek wstępny\",\n      \"when\": \"akcja użytkownika\",\n      \"then\": \"oczekiwany rezultat\"\n    }\n  ]\n}",
+    "human_changes": null,
+    "score": null
+  }
+}
