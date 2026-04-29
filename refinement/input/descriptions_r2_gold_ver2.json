@@ -1,0 +1,5 @@
+{
+  "appointment-booking": "System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzają swoim grafikiem. System powinien zapobiegać konfliktom rezerwacji, ale w niektórych przypadkach dopuszczalne są wyjątki. Użytkownik może anulować wizytę w uzasadnionych przypadkach, jednak anulowanie może być ograniczone czasowo. Specjalista może modyfikować swój grafik, także dla już istniejących rezerwacji. System powinien obsługiwać różne role użytkowników i być skalowalny. ",
+  "helpdesk-ticketing": "",
+  "file-storage-api": ""
+}
