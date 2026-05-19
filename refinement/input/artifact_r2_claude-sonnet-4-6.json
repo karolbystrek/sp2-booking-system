@@ -1,0 +1,313 @@
+{
+  "system_goal": "System umożliwia rezerwację wizyt u specjalistów, zapewniając użytkownikom możliwość przeglądania dostępnych terminów, dokonywania i anulowania rezerwacji. Specjaliści zarządzają swoim grafikiem, a system zapobiega konfliktom rezerwacji przy zachowaniu elastyczności dla wyjątkowych sytuacji.",
+  "roles": [
+    {
+      "name": "Użytkownik",
+      "permissions": [
+        "przeglądanie dostępnych terminów",
+        "dokonywanie rezerwacji wizyty",
+        "anulowanie własnej rezerwacji w dozwolonym oknie czasowym",
+        "przeglądanie historii własnych rezerwacji"
+      ]
+    },
+    {
+      "name": "Specjalista",
+      "permissions": [
+        "zarządzanie własnym grafikiem dostępności",
+        "modyfikowanie terminów istniejących rezerwacji",
+        "przeglądanie listy własnych rezerwacji",
+        "blokowanie wybranych terminów",
+        "anulowanie rezerwacji pacjenta z podaniem przyczyny"
+      ]
+    },
+    {
+      "name": "Administrator",
+      "permissions": [
+        "zarządzanie kontami użytkowników i specjalistów",
+        "przeglądanie wszystkich rezerwacji w systemie",
+        "ręczne rozwiązywanie konfliktów rezerwacji",
+        "konfigurowanie reguł anulowania i wyjątków",
+        "zarządzanie rolami i uprawnieniami",
+        "monitorowanie i raportowanie aktywności systemu"
+      ]
+    }
+  ],
+  "functional_requirements": [
+    {
+      "id": "FR1",
+      "description": "System umożliwia użytkownikom przeglądanie dostępnych terminów wizyt u specjalistów z możliwością filtrowania według specjalizacji, daty i godziny."
+    },
+    {
+      "id": "FR2",
+      "description": "System umożliwia użytkownikowi dokonanie rezerwacji wybranego terminu u specjalisty, po czym termin ten staje się niedostępny dla innych użytkowników."
+    },
+    {
+      "id": "FR3",
+      "description": "System zapobiega konfliktom rezerwacji, blokując możliwość podwójnej rezerwacji tego samego terminu u tego samego specjalisty."
+    },
+    {
+      "id": "FR4",
+      "description": "Administrator może zdefiniować wyjątki od reguły zapobiegania konfliktom, umożliwiając w uzasadnionych przypadkach nakładanie się rezerwacji (np. wizyty grupowe)."
+    },
+    {
+      "id": "FR5",
+      "description": "Użytkownik może anulować rezerwację wyłącznie w określonym oknie czasowym przed planowaną wizytą, konfigurowalnym przez administratora."
+    },
+    {
+      "id": "FR6",
+      "description": "Specjalista może modyfikować swój grafik dostępności, w tym zmieniać lub usuwać terminy, nawet jeśli istnieją już powiązane rezerwacje."
+    },
+    {
+      "id": "FR7",
+      "description": "W przypadku modyfikacji grafiku przez specjalistę, która wpływa na istniejące rezerwacje, system automatycznie powiadamia użytkowników o zmianie i proponuje alternatywne terminy."
+    },
+    {
+      "id": "FR8",
+      "description": "System obsługuje różne role użytkowników (Użytkownik, Specjalista, Administrator) z odrębnymi zestawami uprawnień i widokami interfejsu."
+    },
+    {
+      "id": "FR9",
+      "description": "System wysyła powiadomienia (e-mail lub push) do użytkowników i specjalistów przy tworzeniu, modyfikacji lub anulowaniu rezerwacji."
+    },
+    {
+      "id": "FR10",
+      "description": "System przechowuje historię rezerwacji dla każdego użytkownika i specjalisty, umożliwiając jej przeglądanie i eksport."
+    },
+    {
+      "id": "FR11",
+      "description": "Administrator może konfigurować globalne reguły systemu, takie jak maksymalny czas wyprzedzenia rezerwacji, minimalny czas do anulowania oraz limity rezerwacji na użytkownika."
+    },
+    {
+      "id": "FR12",
+      "description": "System jest zaprojektowany w sposób skalowalny, umożliwiający obsługę rosnącej liczby użytkowników, specjalistów i rezerwacji bez degradacji wydajności."
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR1",
+      "description": "System powinien obsługiwać co najmniej 10 000 jednoczesnych użytkowników bez degradacji czasu odpowiedzi poniżej 2 sekund dla operacji przeglądania i rezerwacji terminów."
+    },
+    {
+      "id": "NFR2",
+      "description": "Dostępność systemu powinna wynosić co najmniej 99,9% w skali miesiąca, z wyłączeniem zaplanowanych okien serwisowych."
+    },
+    {
+      "id": "NFR3",
+      "description": "Wszystkie dane osobowe użytkowników i specjalistów muszą być przechowywane i przesyłane w sposób zgodny z RODO, z szyfrowaniem danych w spoczynku (AES-256) i w tranzycie (TLS 1.2+)."
+    },
+    {
+      "id": "NFR4",
+      "description": "Operacja dokonania lub anulowania rezerwacji powinna zakończyć się w czasie nieprzekraczającym 3 sekund w warunkach normalnego obciążenia systemu."
+    },
+    {
+      "id": "NFR5",
+      "description": "System powinien być skalowalny horyzontalnie, umożliwiając dodawanie nowych węzłów obliczeniowych bez przerywania działania usługi."
+    },
+    {
+      "id": "NFR6",
+      "description": "Interfejs użytkownika powinien być responsywny i dostępny na urządzeniach mobilnych oraz desktopowych, zgodny ze standardem WCAG 2.1 na poziomie AA."
+    },
+    {
+      "id": "NFR7",
+      "description": "System powinien zapewniać mechanizm blokad optymistycznych lub pesymistycznych przy rezerwacji terminów, eliminując wyścig danych (race condition) przy jednoczesnych próbach rezerwacji tego samego terminu."
+    },
+    {
+      "id": "NFR8",
+      "description": "Powiadomienia e-mail i push powinny być dostarczane do odbiorcy w czasie nieprzekraczającym 60 sekund od zdarzenia wywołującego powiadomienie."
+    },
+    {
+      "id": "NFR9",
+      "description": "System powinien przechowywać logi audytowe wszystkich operacji krytycznych (tworzenie, modyfikacja, anulowanie rezerwacji, zmiany uprawnień) przez okres co najmniej 12 miesięcy."
+    },
+    {
+      "id": "NFR10",
+      "description": "Czas przywrócenia systemu po awarii (RTO) nie powinien przekraczać 4 godzin, a maksymalna utrata danych (RPO) nie powinna przekraczać 1 godziny."
+    },
+    {
+      "id": "NFR11",
+      "description": "System powinien posiadać mechanizmy ochrony przed typowymi atakami sieciowymi, w tym SQL Injection, XSS oraz CSRF, zgodnie z wytycznymi OWASP Top 10."
+    },
+    {
+      "id": "NFR12",
+      "description": "Architektura systemu powinna umożliwiać wdrożenie nowych funkcjonalności lub modyfikację istniejących bez konieczności przebudowy całego systemu, z zachowaniem modularności komponentów."
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US1",
+      "description": "Jako użytkownik chcę przeglądać dostępne terminy wizyt z filtrowaniem według specjalizacji, daty i godziny, aby szybko znaleźć odpowiadający mi termin u właściwego specjalisty."
+    },
+    {
+      "id": "US2",
+      "description": "Jako użytkownik chcę zarezerwować wybrany termin wizyty u specjalisty, aby mieć pewność, że nikt inny nie zajmie tego terminu po mojej rezerwacji."
+    },
+    {
+      "id": "US3",
+      "description": "Jako użytkownik chcę anulować moją rezerwację w dozwolonym oknie czasowym, aby móc zrezygnować z wizyty bez konsekwencji, gdy zmienią się moje plany."
+    },
+    {
+      "id": "US4",
+      "description": "Jako użytkownik chcę przeglądać historię moich rezerwacji, aby móc śledzić odbyte i nadchodzące wizyty oraz weryfikować szczegóły poprzednich spotkań."
+    },
+    {
+      "id": "US5",
+      "description": "Jako użytkownik chcę otrzymywać powiadomienia e-mail lub push o potwierdzeniu, zmianie lub anulowaniu rezerwacji, aby być na bieżąco informowany o statusie moich wizyt."
+    },
+    {
+      "id": "US6",
+      "description": "Jako użytkownik chcę otrzymać propozycję alternatywnych terminów, gdy specjalista zmieni lub odwoła mój zarezerwowany termin, aby móc szybko umówić się na nowy termin wizyty."
+    },
+    {
+      "id": "US7",
+      "description": "Jako specjalista chcę zarządzać moim grafikiem dostępności poprzez dodawanie, modyfikowanie i usuwanie terminów, aby mój kalendarz odzwierciedlał moją rzeczywistą dostępność."
+    },
+    {
+      "id": "US8",
+      "description": "Jako specjalista chcę blokować wybrane terminy w moim grafiku, aby zarezerwować czas na przerwy, szkolenia lub inne zobowiązania niedostępne dla rezerwacji."
+    },
+    {
+      "id": "US9",
+      "description": "Jako specjalista chcę przeglądać listę wszystkich moich nadchodzących rezerwacji, aby móc się odpowiednio przygotować do każdej wizyty."
+    },
+    {
+      "id": "US10",
+      "description": "Jako specjalista chcę anulować rezerwację pacjenta z podaniem przyczyny, aby móc zarządzać wyjątkowymi sytuacjami i jednocześnie informować pacjenta o powodzie odwołania."
+    },
+    {
+      "id": "US11",
+      "description": "Jako specjalista chcę modyfikować terminy istniejących rezerwacji, aby móc dostosować grafik do nieprzewidzianych okoliczności bez konieczności ręcznego kontaktowania się z każdym pacjentem."
+    },
+    {
+      "id": "US12",
+      "description": "Jako administrator chcę zarządzać kontami użytkowników i specjalistów, aby móc tworzyć, edytować, dezaktywować konta oraz przypisywać odpowiednie role w systemie."
+    },
+    {
+      "id": "US13",
+      "description": "Jako administrator chcę konfigurować globalne reguły systemu, takie jak minimalny czas do anulowania rezerwacji i maksymalny czas wyprzedzenia, aby dostosować działanie systemu do polityki organizacji."
+    },
+    {
+      "id": "US14",
+      "description": "Jako administrator chcę definiować wyjątki od reguły zapobiegania konfliktom rezerwacji, aby umożliwić nakładanie się terminów w uzasadnionych przypadkach, takich jak wizyty grupowe."
+    },
+    {
+      "id": "US15",
+      "description": "Jako administrator chcę przeglądać wszystkie rezerwacje w systemie i ręcznie rozwiązywać konflikty, aby móc interweniować w sytuacjach wyjątkowych wymagających decyzji administracyjnej."
+    },
+    {
+      "id": "US16",
+      "description": "Jako administrator chcę monitorować aktywność systemu i generować raporty dotyczące rezerwacji, aby analizować wykorzystanie systemu i podejmować decyzje optymalizacyjne."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "given": "użytkownik jest zalogowany i znajduje się na stronie przeglądania terminów",
+      "when": "użytkownik wybiera filtr według specjalizacji, daty i godziny",
+      "then": "system wyświetla listę dostępnych terminów spełniających wszystkie wybrane kryteria filtrowania"
+    },
+    {
+      "id": "AC2",
+      "given": "użytkownik jest zalogowany i przegląda dostępne terminy",
+      "when": "użytkownik wybiera termin i potwierdza rezerwację",
+      "then": "system rezerwuje termin, oznacza go jako niedostępny dla innych użytkowników i wyświetla potwierdzenie rezerwacji"
+    },
+    {
+      "id": "AC3",
+      "given": "użytkownik posiada aktywną rezerwację i czas do wizyty jest większy niż minimalny dozwolony czas anulowania",
+      "when": "użytkownik wybiera opcję anulowania rezerwacji i potwierdza decyzję",
+      "then": "system anuluje rezerwację, zwalnia termin i wyświetla komunikat o pomyślnym anulowaniu bez naliczania konsekwencji"
+    },
+    {
+      "id": "AC4",
+      "given": "użytkownik posiada aktywną rezerwację i czas do wizyty jest mniejszy niż minimalny dozwolony czas anulowania",
+      "when": "użytkownik próbuje anulować rezerwację",
+      "then": "system blokuje anulowanie i wyświetla komunikat informujący o przekroczeniu dozwolonego okna czasowego"
+    },
+    {
+      "id": "AC5",
+      "given": "użytkownik jest zalogowany i posiada historię rezerwacji",
+      "when": "użytkownik przechodzi do sekcji historii rezerwacji",
+      "then": "system wyświetla listę wszystkich odbytych i nadchodzących wizyt wraz ze szczegółami takimi jak data, godzina, specjalista i status rezerwacji"
+    },
+    {
+      "id": "AC6",
+      "given": "użytkownik posiada aktywną rezerwację i ma skonfigurowane powiadomienia",
+      "when": "status rezerwacji zmienia się na potwierdzony, zmieniony lub anulowany",
+      "then": "system wysyła powiadomienie e-mail lub push do użytkownika z informacją o nowym statusie rezerwacji"
+    },
+    {
+      "id": "AC7",
+      "given": "specjalista zmienił lub anulował termin wizyty użytkownika",
+      "when": "system przetwarza zmianę terminu",
+      "then": "system generuje i prezentuje użytkownikowi listę co najmniej trzech alternatywnych dostępnych terminów u tego samego specjalisty"
+    },
+    {
+      "id": "AC8",
+      "given": "specjalista jest zalogowany i znajduje się w panelu zarządzania grafikiem",
+      "when": "specjalista dodaje, modyfikuje lub usuwa termin dostępności",
+      "then": "system aktualizuje kalendarz specjalisty i odzwierciedla zmiany w widoku dostępnych terminów dla użytkowników"
+    },
+    {
+      "id": "AC9",
+      "given": "specjalista jest zalogowany i znajduje się w panelu zarządzania grafikiem",
+      "when": "specjalista wybiera termin i oznacza go jako zablokowany z podaniem powodu",
+      "then": "system blokuje wybrany termin, uniemożliwia rezerwację przez użytkowników i wyświetla termin jako niedostępny"
+    },
+    {
+      "id": "AC10",
+      "given": "specjalista jest zalogowany i posiada nadchodzące rezerwacje",
+      "when": "specjalista przechodzi do sekcji nadchodzących rezerwacji",
+      "then": "system wyświetla posortowaną chronologicznie listę wszystkich nadchodzących rezerwacji z danymi pacjentów i szczegółami wizyt"
+    },
+    {
+      "id": "AC11",
+      "given": "specjalista jest zalogowany i wybiera aktywną rezerwację pacjenta",
+      "when": "specjalista anuluje rezerwację i podaje przyczynę anulowania",
+      "then": "system anuluje rezerwację, zwalnia termin, zapisuje podaną przyczynę i wysyła powiadomienie do pacjenta z informacją o anulowaniu i jego przyczynie"
+    },
+    {
+      "id": "AC12",
+      "given": "specjalista jest zalogowany i wybiera istniejącą rezerwację pacjenta",
+      "when": "specjalista modyfikuje termin rezerwacji na nowy dostępny termin",
+      "then": "system aktualizuje rezerwację, zwalnia stary termin, blokuje nowy termin i wysyła powiadomienie do pacjenta o zmianie terminu"
+    },
+    {
+      "id": "AC13",
+      "given": "administrator jest zalogowany i znajduje się w panelu zarządzania kontami",
+      "when": "administrator tworzy, edytuje lub dezaktywuje konto użytkownika lub specjalisty i przypisuje rolę",
+      "then": "system zapisuje zmiany, aktualizuje uprawnienia konta zgodnie z przypisaną rolą i wyświetla potwierdzenie wykonanej operacji"
+    },
+    {
+      "id": "AC14",
+      "given": "administrator jest zalogowany i znajduje się w panelu konfiguracji systemu",
+      "when": "administrator ustawia minimalny czas do anulowania rezerwacji i maksymalny czas wyprzedzenia rezerwacji",
+      "then": "system zapisuje nowe reguły i stosuje je natychmiast do wszystkich nowych operacji rezerwacji i anulowania w systemie"
+    },
+    {
+      "id": "AC15",
+      "given": "administrator jest zalogowany i konfiguruje reguły konfliktów rezerwacji",
+      "when": "administrator definiuje wyjątek umożliwiający nakładanie się terminów dla określonego przypadku, takiego jak wizyta grupowa",
+      "then": "system zapisuje wyjątek i umożliwia nakładanie się terminów wyłącznie w zdefiniowanych przypadkach, zachowując standardową ochronę przed konfliktami dla pozostałych rezerwacji"
+    },
+    {
+      "id": "AC16",
+      "given": "administrator jest zalogowany i znajduje się w panelu zarządzania rezerwacjami",
+      "when": "administrator przegląda wszystkie rezerwacje i wybiera konfliktującą rezerwację do ręcznego rozwiązania",
+      "then": "system wyświetla szczegóły konfliktu, umożliwia administratorowi podjęcie decyzji i zapisuje wprowadzone zmiany z adnotacją o interwencji administracyjnej"
+    },
+    {
+      "id": "AC17",
+      "given": "administrator jest zalogowany i znajduje się w panelu raportów",
+      "when": "administrator wybiera zakres dat i typ raportu dotyczącego rezerwacji",
+      "then": "system generuje raport zawierający statystyki rezerwacji, anulowań, obłożenia terminów i aktywności użytkowników w wybranym okresie"
+    }
+  ],
+  "metadata": {
+    "version": "llm",
+    "case_study": "appointment-booking",
+    "model_used": "claude-sonnet-4-6",
+    "prompt_log": "[R2-KROK1]\nOpis systemu: System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzają swoim grafikiem. System powinien zapobiegać konfliktom rezerwacji, ale w niektórych przypadkach dopuszczalne są wyjątki. Użytkownik może anulować wizytę w uzasadnionych przypadkach, jednak anulowanie może być ograniczone czasowo. Specjalista może modyfikować swój grafik, także dla już istniejących rezerwacji. System powinien obsługiwać różne role użytkowników i być skalowalny. \n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"system_goal\": \"Zwięzły, spójny opis celu systemu (1-3 zdania).\",\n  \"roles\": [\n    {\"name\": \"NazwaRoli\", \"permissions\": [\"uprawnienie1\", \"uprawnienie2\"]}\n  ],\n  \"functional_requirements\": [\n    {\"id\": \"FR1\", \"description\": \"Treść wymagania.\"}\n  ]\n}\n\n[R2-KROK2]\nOpis systemu: System umożliwia użytkownikom rezerwację wizyt u specjalistów (np. lekarzy lub konsultantów). Użytkownicy mogą przeglądać dostępne terminy, dokonywać rezerwacji oraz je anulować. Specjaliści zarządzają swoim grafikiem. System powinien zapobiegać konfliktom rezerwacji, ale w niektórych przypadkach dopuszczalne są wyjątki. Użytkownik może anulować wizytę w uzasadnionych przypadkach, jednak anulowanie może być ograniczone czasowo. Specjalista może modyfikować swój grafik, także dla już istniejących rezerwacji. System powinien obsługiwać różne role użytkowników i być skalowalny. \nWygenerowane FR: {\"system_goal\": \"System umożliwia rezerwację wizyt u specjalistów, zapewniając użytkownikom możliwość przeglądania dostępnych terminów, dokonywania i anulowania rezerwacji. Specjaliści zarządzają swoim grafikiem, a system zapobiega konfliktom rezerwacji przy zachowaniu elastyczności dla wyjątkowych sytuacji.\", \"roles\": [{\"name\": \"Użytkownik\", \"permissions\": [\"przeglądanie dostępnych terminów\", \"dokonywanie rezerwacji wizyty\", \"anulowanie własnej rezerwacji w dozwolonym oknie czasowym\", \"przeglądanie historii własnych rezerwacji\"]}, {\"name\": \"Specjalista\", \"permissions\": [\"zarządzanie własnym grafikiem dostępności\", \"modyfikowanie terminów istniejących rezerwacji\", \"przeglądanie listy własnych rezerwacji\", \"blokowanie wybranych terminów\", \"anulowanie rezerwacji pacjenta z podaniem przyczyny\"]}, {\"name\": \"Administrator\", \"permissions\": [\"zarządzanie kontami użytkowników i specjalistów\", \"przeglądanie wszystkich rezerwacji w systemie\", \"ręczne rozwiązywanie konfliktów rezerwacji\", \"konfigurowanie reguł anulowania i wyjątków\", \"zarządzanie rolami i uprawnieniami\", \"monitorowanie i raportowanie aktywności systemu\"]}], \"functional_requirements\": [{\"id\": \"FR1\", \"description\": \"System umożliwia użytkownikom przeglądanie dostępnych terminów wizyt u specjalistów z możliwością filtrowania według specjalizacji, daty i godziny.\"}, {\"id\": \"FR2\", \"description\": \"System umożliwia użytkownikowi dokonanie rezerwacji wybranego terminu u specjalisty, po czym termin ten staje się niedostępny dla innych użytkowników.\"}, {\"id\": \"FR3\", \"description\": \"System zapobiega konfliktom rezerwacji, blokując możliwość podwójnej rezerwacji tego samego terminu u tego samego specjalisty.\"}, {\"id\": \"FR4\", \"description\": \"Administrator może zdefiniować wyjątki od reguły zapobiegania konfliktom, umożliwiając w uzasadnionych przypadkach nakładanie się rezerwacji (np. wizyty grupowe).\"}, {\"id\": \"FR5\", \"description\": \"Użytkownik może anulować rezerwację wyłącznie w określonym oknie czasowym przed planowaną wizytą, konfigurowalnym przez administratora.\"}, {\"id\": \"FR6\", \"description\": \"Specjalista może modyfikować swój grafik dostępności, w tym zmieniać lub usuwać terminy, nawet jeśli istnieją już powiązane rezerwacje.\"}, {\"id\": \"FR7\", \"description\": \"W przypadku modyfikacji grafiku przez specjalistę, która wpływa na istniejące rezerwacje, system automatycznie powiadamia użytkowników o zmianie i proponuje alternatywne terminy.\"}, {\"id\": \"FR8\", \"description\": \"System obsługuje różne role użytkowników (Użytkownik, Specjalista, Administrator) z odrębnymi zestawami uprawnień i widokami interfejsu.\"}, {\"id\": \"FR9\", \"description\": \"System wysyła powiadomienia (e-mail lub push) do użytkowników i specjalistów przy tworzeniu, modyfikacji lub anulowaniu rezerwacji.\"}, {\"id\": \"FR10\", \"description\": \"System przechowuje historię rezerwacji dla każdego użytkownika i specjalisty, umożliwiając jej przeglądanie i eksport.\"}, {\"id\": \"FR11\", \"description\": \"Administrator może konfigurować globalne reguły systemu, takie jak maksymalny czas wyprzedzenia rezerwacji, minimalny czas do anulowania oraz limity rezerwacji na użytkownika.\"}, {\"id\": \"FR12\", \"description\": \"System jest zaprojektowany w sposób skalowalny, umożliwiający obsługę rosnącej liczby użytkowników, specjalistów i rezerwacji bez degradacji wydajności.\"}]}\n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"non_functional_requirements\": [\n    {\"id\": \"NFR1\", \"description\": \"Treść wymagania.\"}\n  ],\n  \"user_stories\": [\n    {\"id\": \"US1\", \"description\": \"Jako X chcę Y, aby Z.\"}\n  ]\n}\n\n[R2-KROK3]\nUser stories: [{\"id\": \"US1\", \"description\": \"Jako użytkownik chcę przeglądać dostępne terminy wizyt z filtrowaniem według specjalizacji, daty i godziny, aby szybko znaleźć odpowiadający mi termin u właściwego specjalisty.\"}, {\"id\": \"US2\", \"description\": \"Jako użytkownik chcę zarezerwować wybrany termin wizyty u specjalisty, aby mieć pewność, że nikt inny nie zajmie tego terminu po mojej rezerwacji.\"}, {\"id\": \"US3\", \"description\": \"Jako użytkownik chcę anulować moją rezerwację w dozwolonym oknie czasowym, aby móc zrezygnować z wizyty bez konsekwencji, gdy zmienią się moje plany.\"}, {\"id\": \"US4\", \"description\": \"Jako użytkownik chcę przeglądać historię moich rezerwacji, aby móc śledzić odbyte i nadchodzące wizyty oraz weryfikować szczegóły poprzednich spotkań.\"}, {\"id\": \"US5\", \"description\": \"Jako użytkownik chcę otrzymywać powiadomienia e-mail lub push o potwierdzeniu, zmianie lub anulowaniu rezerwacji, aby być na bieżąco informowany o statusie moich wizyt.\"}, {\"id\": \"US6\", \"description\": \"Jako użytkownik chcę otrzymać propozycję alternatywnych terminów, gdy specjalista zmieni lub odwoła mój zarezerwowany termin, aby móc szybko umówić się na nowy termin wizyty.\"}, {\"id\": \"US7\", \"description\": \"Jako specjalista chcę zarządzać moim grafikiem dostępności poprzez dodawanie, modyfikowanie i usuwanie terminów, aby mój kalendarz odzwierciedlał moją rzeczywistą dostępność.\"}, {\"id\": \"US8\", \"description\": \"Jako specjalista chcę blokować wybrane terminy w moim grafiku, aby zarezerwować czas na przerwy, szkolenia lub inne zobowiązania niedostępne dla rezerwacji.\"}, {\"id\": \"US9\", \"description\": \"Jako specjalista chcę przeglądać listę wszystkich moich nadchodzących rezerwacji, aby móc się odpowiednio przygotować do każdej wizyty.\"}, {\"id\": \"US10\", \"description\": \"Jako specjalista chcę anulować rezerwację pacjenta z podaniem przyczyny, aby móc zarządzać wyjątkowymi sytuacjami i jednocześnie informować pacjenta o powodzie odwołania.\"}, {\"id\": \"US11\", \"description\": \"Jako specjalista chcę modyfikować terminy istniejących rezerwacji, aby móc dostosować grafik do nieprzewidzianych okoliczności bez konieczności ręcznego kontaktowania się z każdym pacjentem.\"}, {\"id\": \"US12\", \"description\": \"Jako administrator chcę zarządzać kontami użytkowników i specjalistów, aby móc tworzyć, edytować, dezaktywować konta oraz przypisywać odpowiednie role w systemie.\"}, {\"id\": \"US13\", \"description\": \"Jako administrator chcę konfigurować globalne reguły systemu, takie jak minimalny czas do anulowania rezerwacji i maksymalny czas wyprzedzenia, aby dostosować działanie systemu do polityki organizacji.\"}, {\"id\": \"US14\", \"description\": \"Jako administrator chcę definiować wyjątki od reguły zapobiegania konfliktom rezerwacji, aby umożliwić nakładanie się terminów w uzasadnionych przypadkach, takich jak wizyty grupowe.\"}, {\"id\": \"US15\", \"description\": \"Jako administrator chcę przeglądać wszystkie rezerwacje w systemie i ręcznie rozwiązywać konflikty, aby móc interweniować w sytuacjach wyjątkowych wymagających decyzji administracyjnej.\"}, {\"id\": \"US16\", \"description\": \"Jako administrator chcę monitorować aktywność systemu i generować raporty dotyczące rezerwacji, aby analizować wykorzystanie systemu i podejmować decyzje optymalizacyjne.\"}]\n\nWygeneruj TYLKO ten fragment JSON z dokładnie taką strukturą:\n{\n  \"acceptance_criteria\": [\n    {\n      \"id\": \"AC1\",\n      \"given\": \"warunek wstępny\",\n      \"when\": \"akcja użytkownika\",\n      \"then\": \"oczekiwany rezultat\"\n    }\n  ]\n}",
+    "human_changes": null,
+    "score": null
+  }
+}
