@@ -1,732 +1,572 @@
 # 1. Analiza Domen i Encji
 
-Doskonale, przeanalizuję te wymagania jako doświadczony architekt oprogramowania. Kluczem do skalowalnej i łatwej w utrzymaniu architektury jest prawidłowe zdefiniowanie Domen (Bounded Contexts) oraz kluczowych Encji Domenowych, które stanowią rdzeń każdego kontekstu.
+Jako doświadczony architekt oprogramowania, analizując dostarczone wymagania, zidentyfikowałem następujące główne Domena (Bounded Contexts) oraz kluczowe Encje Domenowe. Przyjąłem podejście Domain-Driven Design (DDD), aby zapewnić spójność i niezależność kontekstów.
 
-### Analiza Wymagań i Identyfikacja Domen (Bounded Contexts)
+---
 
-Przyglądając się wymaganiom funkcjonalnym, rolom, historyjkom użytkownika i kryteriom akceptacji, możemy wyodrębnić następujące, spójne domeny biznesowe:
+### Analiza Wymagań i Identyfikacja Domen
 
-1.  **Identity & Access Management (IAM)**
-    *   **Uzasadnienie:** Wymagania definiują różne role (`Użytkownik`, `Specjalista`, `Administrator`) z różnymi uprawnieniami (FR6). Potrzebujemy centralnego miejsca do zarządzania tożsamościami użytkowników, uwierzytelnianiem i autoryzacją. NFR5 (wylogowanie po braku aktywności) również wpisuje się w ten kontekst.
-    *   **Cel:** Zarządzanie tożsamościami użytkowników, ich rolami, uprawnieniami oraz procesami uwierzytelniania i autoryzacji.
-    *   **Kluczowe Encje Domenowe:**
-        *   **User:** Podstawowa jednostka użytkownika systemu (np. Użytkownik, Specjalista, Administrator), zawierająca dane do logowania (login, hasło), dane profilowe (imię, nazwisko, email, telefon).
-        *   **Role:** Określa zestaw uprawnień przypisanych do użytkownika (np. "Użytkownik", "Specjalista", "Administrator").
-        *   **Permission:** Konkretne uprawnienie do wykonania operacji w systemie (np. `przeglądanie_terminów`, `zarządzanie_grafikiem`).
-        *   **Session:** Reprezentuje aktywną sesję użytkownika, używaną do zarządzania wylogowaniem po nieaktywności.
+**Kluczowe obserwacje:**
 
-2.  **Specialist Management**
-    *   **Uzasadnienie:** US1 mówi o wyszukiwaniu specjalistów po nazwisku lub specjalizacji. Specjalista to nie tylko rola, ale byt z konkretnymi atrybutami biznesowymi. Ten kontekst zarządza danymi o samych specjalistach.
-    *   **Cel:** Zarządzanie profilami specjalistów, ich danymi kontaktowymi, specjalizacjami i innymi informacjami potrzebnymi do ich wyszukiwania i identyfikacji.
-    *   **Kluczowe Encje Domenowe:**
-        *   **Specialist:** Reprezentuje specjalistę (np. lekarz, konsultant) z jego unikalnymi danymi (imię, nazwisko, specjalizacja, opis, dane kontaktowe, link do powiązanego User ID z IAM).
+1.  **Różne Role:** Mamy trzy główne role: Użytkownik (Pacjent), Specjalista, Administrator, co sugeruje potrzebę kontekstu zarządzania tożsamością i uprawnieniami.
+2.  **Zarządzanie Czasem:** Specjaliści zarządzają *swoim* grafikiem, a użytkownicy rezerwują *dostępne* terminy. Są to dwie strony tego samego medalu, ale z różnymi perspektywami i operacjami.
+3.  **Transakcyjność Rezerwacji:** Rezerwacja to kluczowa transakcja, która blokuje termin i ma swój cykl życia (potwierdzenie, anulowanie, modyfikacja).
+4.  **Wyszukiwanie Dostępności:** Wyszukiwanie wolnych terminów to operacja, która musi być wydajna (NFR2) i prezentować zagregowany widok.
+5.  **Powiadomienia:** Zmiany statusów rezerwacji i grafików wymagają wysyłania powiadomień.
+6.  **Wymagania Niefunkcjonalne (NFRs):** Skalowalność (NFR1), wydajność wyszukiwania (NFR2) i wysoka dostępność (NFR3) sugerują potrzebę rozdzielenia na mikroserwisy lub przynajmniej luźno powiązane konteksty. Bezpieczeństwo danych (NFR4 - RODO) jest kluczowe dla danych osobowych i medycznych.
 
-3.  **Scheduling & Availability**
-    *   **Uzasadnienie:** FR1 (przeglądanie dostępnych terminów), FR4 (zarządzanie grafikiem przez specjalistów), US3 (blokowanie dni urlopu) jasno wskazują na domenę odpowiedzialną za definiowanie i utrzymywanie dostępności specjalisty.
-    *   **Cel:** Zarządzanie grafikiem pracy specjalistów, definiowanie dostępnych terminów (slotów czasowych) oraz blokowanie dni wolnych/urlopów, a także udostępnianie informacji o dostępności.
-    *   **Kluczowe Encje Domenowe:**
-        *   **Schedule:** Ogólny grafik pracy specjalisty, który może zawierać cykliczne bloki dostępności.
-        *   **TimeSlot:** Pojedynczy, zdefiniowany blok czasu, który specjalista zaoferował jako potencjalnie dostępny. Może mieć status (np. "Available", "Booked" - ale status *zarezerwowany* jest zarządzany przez `Appointment Booking`).
-        *   **LeavePeriod:** Okres niedostępności specjalisty (np. urlop, choroba), który blokuje możliwość rezerwacji w tym czasie.
+---
 
-4.  **Appointment Booking**
-    *   **Uzasadnienie:** FR2 (dokonanie rezerwacji), FR3 (anulowanie rezerwacji), FR5 (blokowanie terminu po rezerwacji), US4 (powód wizyty). To jest centralna domena biznesowa systemu.
-    *   **Cel:** Obsługa procesu rezerwacji wizyt, ich anulowania, walidacji dostępności terminów oraz zarządzanie politykami anulowań i cyklem życia wizyty.
-    *   **Kluczowe Encje Domenowe:**
-        *   **Appointment:** Główna encja reprezentująca zarezerwowaną wizytę, zawierająca referencje do `Specialist` (z `Specialist Management`), `User` (z `IAM`), `TimeSlot` (z `Scheduling`), datę i czas, status rezerwacji oraz opcjonalny powód wizyty (US4).
-        *   **AppointmentStatus:** Status rezerwacji (np. "Pending", "Confirmed", "Cancelled", "Completed", "No-Show").
-        *   **CancellationPolicy:** Zasady dotyczące możliwości i warunków anulowania wizyty (np. minimalny czas przed wizytą, opłaty).
+### Zidentyfikowane Domeny (Bounded Contexts) i Kluczowe Encje
 
-5.  **Notifications**
-    *   **Uzasadnienie:** US2 (potwierdzenie rezerwacji na e-mail), AC2 (wysyłka e-maila po zatwierdzeniu rezerwacji). Wysyłka powiadomień jest osobną odpowiedzialnością, która powinna być luźno sprzężona z domenami biznesowymi.
-    *   **Cel:** Obsługa wysyłki różnego rodzaju powiadomień do użytkowników (np. e-mail z potwierdzeniem rezerwacji, przypomnienia, powiadomienia o anulowaniu).
-    *   **Kluczowe Encje Domenowe:**
-        *   **Notification:** Reprezentuje wysłane lub oczekujące powiadomienie (zawiera typ, odbiorcę, treść, status wysyłki).
-        *   **NotificationTemplate:** Szablon dla różnych typów powiadomień (np. "potwierdzenie rezerwacji", "anulowanie wizyty").
+Na podstawie powyższej analizy, proponuję następujące Bounded Contexts:
 
-6.  **Reporting & Analytics**
-    *   **Uzasadnienie:** Administrator potrzebuje raportów (rola Administrator, US5, AC5). Generowanie raportów to często proces agregacji danych z wielu innych kontekstów, z innymi wymaganiami dotyczącymi spójności danych (często wystarcza spójność ostateczna) i wydajności.
-    *   **Cel:** Agregowanie danych z innych domen, przetwarzanie ich i udostępnianie w formie raportów i analiz na potrzeby administratorów i zarządzających.
-    *   **Kluczowe Encje Domenowe:**
-        *   **Report:** Agregacja danych dla konkretnego raportu (np. "Raport Miesięczny Obłożenia", "Raport Wizyt Zrealizowanych").
-        *   **ReportCriterion:** Kryteria do generowania raportu (np. zakres dat, specjalista).
-        *   *(Ten kontekst często operuje na zdenormalizowanych danych lub widokach, które są projekcjami zdarzeń z innych kontekstów.)*
+#### 1. Tożsamość i Dostęp (Identity & Access)
 
-7.  **System Configuration**
-    *   **Uzasadnienie:** Rola Administratora ma uprawnienie "konfiguracja_systemu". Ten kontekst będzie przechowywał ogólnosystemowe ustawienia, takie jak polityki bezpieczeństwa (NFR5 - czas wylogowania), globalne ustawienia poczty itp.
-    *   **Cel:** Zarządzanie globalnymi ustawieniami i parametrami działania systemu.
-    *   **Kluczowe Encje Domenowe:**
-        *   **ConfigurationSetting:** Para klucz-wartość dla globalnych ustawień systemu (np. `session.timeout.minutes`, `email.sender.address`, `default.cancellation.policy.rules`).
+*   **Cel:** Zarządzanie kontami użytkowników, uwierzytelnianiem, autoryzacją oraz rolami w systemie. Zapewnia bezpieczeństwo i kontrolę dostępu.
+*   **Responsywność:**
+    *   Rejestracja i logowanie użytkowników (Pacjent, Specjalista, Administrator).
+    *   Zarządzanie profilami użytkowników (dane kontaktowe, dane osobowe z uwzględnieniem RODO).
+    *   Przydzielanie i zarządzanie rolami oraz uprawnieniami (US6, AC6).
+    *   Uwierzytelnianie i autoryzacja żądań.
+*   **Kluczowe Encje Domenowe:**
+    *   **`Użytkownik`**: Podstawowa encja reprezentująca osobę korzystającą z systemu. Zawiera dane uwierzytelniające, dane kontaktowe i unikalny identyfikator.
+    *   **`Rola`**: Definiuje zbiór uprawnień (np. "Pacjent", "Specjalista", "Administrator").
+    *   **`Uprawnienie`**: Granularne prawa do wykonania konkretnych akcji w systemie (np. `rezerwuj_termin`, `edytuj_grafik`).
 
-### Podsumowanie Kluczowych Domen i Encji
+#### 2. Zarządzanie Grafikiem (Schedule Management)
 
-**Domeny (Bounded Contexts):**
+*   **Cel:** Umożliwienie specjalistom definiowania i zarządzania swoimi godzinami pracy i dostępnością. Jest to "źródło prawdy" dla potencjalnej dostępności specjalisty.
+*   **Responsywność:**
+    *   Tworzenie, edycja i usuwanie bloków dostępności specjalisty (US4, AC4).
+    *   Definiowanie przerw, dni wolnych, urlopów.
+    *   Zarządzanie lokalizacjami pracy specjalisty (jeśli dotyczy).
+*   **Kluczowe Encje Domenowe:**
+    *   **`Specjalista`**: Reprezentacja specjalisty w kontekście jego grafiku. Zawiera ID powiązane z `Użytkownikiem` oraz specyficzne dane (np. specjalizacja, czas trwania domyślnej wizyty).
+    *   **`GrafikSpecjalisty`**: Agregat zawierający wszystkie bloki dostępności dla danego specjalisty.
+    *   **`BlokDostępności`**: Konkretny przedział czasu, w którym specjalista jest dostępny do pracy (np. "poniedziałek, 9:00-17:00"). Może zawierać typ (praca, przerwa, wolne).
 
-1.  **Identity & Access Management (IAM)**
-2.  **Specialist Management**
-3.  **Scheduling & Availability**
-4.  **Appointment Booking**
-5.  **Notifications**
-6.  **Reporting & Analytics**
-7.  **System Configuration**
+#### 3. Dostępność Terminów (Appointment Availability)
 
-**Najważniejsze Encje Domenowe (w podziale na konteksty):**
+*   **Cel:** Prezentowanie użytkownikom aktualnej, zagregowanej i zoptymalizowanej pod kątem wyszukiwania listy wolnych terminów, bazując na grafiku specjalistów i istniejących rezerwacjach.
+*   **Responsywność:**
+    *   Wyszukiwanie dostępnych terminów dla danego specjalisty lub specjalizacji (US1, AC1, NFR2).
+    *   Agregacja danych z `Zarządzania Grafikiem` i `Rezerwacji` w czasie rzeczywistym.
+    *   Filtrowanie i sortowanie terminów.
+*   **Kluczowe Encje Domenowe:**
+    *   **`Specjalista`**: Lżejsza reprezentacja specjalisty, wystarczająca do wyświetlenia w kontekście wyszukiwania (ID, imię, specjalizacja).
+    *   **`TerminDostępności`**: Obiekt reprezentujący pojedynczy, wolny slot czasowy, który może zostać zarezerwowany. Jest to stan wyliczeniowy, a nie trwały obiekt.
+    *   **`Usługa`** (opcjonalnie): Jeśli specjaliści oferują różne usługi o różnym czasie trwania (np. "konsultacja 30 min", "zabieg 60 min").
 
-*   **IAM:** `User`, `Role`, `Permission`, `Session`
-*   **Specialist Management:** `Specialist`
-*   **Scheduling & Availability:** `Schedule`, `TimeSlot`, `LeavePeriod`
-*   **Appointment Booking:** `Appointment`, `AppointmentStatus`, `CancellationPolicy`, `AppointmentReason`
-*   **Notifications:** `Notification`, `NotificationTemplate`
-*   **Reporting & Analytics:** `Report`, `ReportCriterion`
-*   **System Configuration:** `ConfigurationSetting`
+#### 4. Rezerwacje (Reservations)
 
-Taki podział pozwala na niezależne rozwijanie i skalowanie poszczególnych części systemu, redukuje złożoność i ułatwia zarządzanie zmianami. Relacje między kontekstami będą realizowane poprzez API lub komunikację asynchroniczną (np. zdarzenia domenowe).
+*   **Cel:** Obsługa cyklu życia rezerwacji: tworzenie, potwierdzanie, modyfikowanie i anulowanie. Zarządzanie transakcyjnym procesem blokowania terminów.
+*   **Responsywność:**
+    *   Dokonywanie rezerwacji wybranych terminów (US2, AC2).
+    *   Anulowanie rezerwacji (US3, AC3).
+    *   Modyfikacja istniejących rezerwacji przez specjalistę (US5, AC5).
+    *   Zapobieganie konfliktom rezerwacji na tym samym terminie (AC2).
+    *   Zarządzanie statusami rezerwacji (np. "Potwierdzona", "Anulowana", "Zmieniona").
+*   **Kluczowe Encje Domenowe:**
+    *   **`Rezerwacja`**: Główny agregat. Reprezentuje potwierdzoną wizytę.
+        *   Zawiera: ID rezerwacji, ID pacjenta, ID specjalisty, data i czas wizyty, czas trwania, status rezerwacji.
+    *   **`Pacjent`**: Lżejsza reprezentacja pacjenta w kontekście rezerwacji (ID powiązane z `Użytkownikiem`).
+    *   **`Specjalista`**: Lżejsza reprezentacja specjalisty w kontekście rezerwacji (ID powiązane z `Użytkownikiem`).
+    *   **`TerminWizyty`**: Konkretny przedział czasowy, który został zarezerwowany.
+
+#### 5. Powiadomienia (Notifications)
+
+*   **Cel:** Obsługa wysyłki wszelkich powiadomień do użytkowników i specjalistów (e-mail, SMS itp.) w odpowiedzi na zdarzenia w innych kontekstach.
+*   **Responsywność:**
+    *   Wysyłanie potwierdzeń rezerwacji (AC2).
+    *   Wysyłanie powiadomień o anulowaniu.
+    *   Wysyłanie powiadomień o zmianie terminu wizyty (AC5).
+    *   Obsługa szablonów powiadomień.
+*   **Kluczowe Encje Domenowe:**
+    *   **`Powiadomienie`**: Agregat reprezentujący wiadomość do wysłania. Zawiera treść, adresata, kanał wysyłki (e-mail, SMS) i status wysyłki.
+    *   **`SzablonPowiadomienia`**: Definiuje strukturę i treść różnych typów powiadomień.
+    *   **`AdresatPowiadomienia`**: Dane kontaktowe do wysyłki (e-mail, numer telefonu), powiązane z ID `Użytkownika`.
+
+---
+
+### Relacje i Przepływy Między Kontekstami (Wysoki Poziom)
+
+*   `Tożsamość i Dostęp` jest upstream dla wszystkich innych kontekstów, dostarczając informacje o `Użytkownikach`, `Rolach` i `Uprawnieniach`.
+*   `Zarządzanie Grafikiem` publikuje zdarzenia (np. "GrafikSpecjalistyZmieniony"), które są konsumowane przez `Dostępność Terminów` w celu aktualizacji widoku dostępnych slotów.
+*   `Rezerwacje` odwołuje się do `Specjalisty` i `Pacjenta` (poprzez ich ID) z kontekstu `Tożsamość i Dostęp`.
+*   `Rezerwacje` publikuje zdarzenia (np. "RezerwacjaUtworzona", "RezerwacjaAnulowana", "RezerwacjaZmieniona"), które są konsumowane przez:
+    *   `Dostępność Terminów` w celu aktualizacji wolnych slotów.
+    *   `Powiadomienia` w celu wysłania odpowiednich wiadomości.
+*   `Dostępność Terminów` jest czytnikiem, który łączy dane z `Zarządzania Grafikiem` i `Rezerwacji`, aby prezentować aktualny stan wolnych slotów.
+
+Taka architektura, oparta na Bounded Contexts, pozwoli na niezależne rozwijanie, skalowanie i wdrażanie poszczególnych komponentów, jednocześnie zapewniając spójność domenową i elastyczność w reagowaniu na zmieniające się wymagania biznesowe.
 
 ---
 
 # 2. Zaproponowana Architektura
 
-Na podstawie analizy domen, proponuję architekturę opartą na mikroserwisach, uzupełnioną o inne wzorce w celu zapewnienia skalowalności, elastyczności i łatwości utrzymania systemu.
+Na podstawie dostarczonej analizy domen i zidentyfikowanych wymagań funkcjonalnych oraz niefunkcjonalnych (NFRs), proponuję architekturę systemu opartą na **Mikroserwisach (Microservices)** z wykorzystaniem **Architektury Zorientowanej na Zdarzenia (Event-Driven Architecture - EDA)** oraz wzorca **CQRS (Command Query Responsibility Segregation)** w kluczowym kontekście `Dostępność Terminów`.
 
 ---
 
 ### 1. Wybór Konkretnych Wzorców Architektonicznych i Uzasadnienie
 
-**Główny Wzorzec: Architektura Mikroserwisów (Microservices Architecture)**
+**Wzorce Architektoniczne:**
 
-**Uzasadnienie:**
-1.  **Wyraźne Konteksty Domenowe (Bounded Contexts):** Dostarczona analiza domen bardzo klarownie wyodrębnia 7 niezależnych domen biznesowych (IAM, Specialist, Scheduling, Appointment, Notifications, Reporting, System Configuration). Mikroserwisy są idealnym wyborem, ponieważ każdy kontekst domenowy może być zaimplementowany jako niezależny mikroserwis, posiadający własną logikę biznesową i dane.
-2.  **Skalowalność (NFR1):** Mikroserwisy pozwalają na niezależne skalowanie poszczególnych części systemu. Jeśli usługa rezerwacji (Appointment Service) będzie miała większe obciążenie niż zarządzanie specjalistami (Specialist Service), tylko ona może być skalowana w poziomie, optymalizując wykorzystanie zasobów i spełniając NFR1.
-3.  **Niezależność Rozwoju i Wdrażania:** Każdy mikroserwis może być rozwijany, testowany i wdrażany niezależnie od innych. Ułatwia to pracę wielu zespołów, przyspiesza cykl wydawniczy i redukuje ryzyko regresji w całym systemie.
-4.  **Odporność (Resilience):** Awaria jednego mikroserwisu (np. usługi raportowania) nie powoduje awarii całego systemu, co zwiększa jego ogólną dostępność (NFR2).
-5.  **Technologiczna Heterogeniczność:** Umożliwia wybór najodpowiedniejszych technologii dla danego mikroserwisu, choć często dla spójności preferuje się wspólny stos technologiczny.
-6.  **Luźne Sprzężenie:** Komunikacja między mikroserwisami odbywa się poprzez dobrze zdefiniowane API (synchroniczne) lub asynchroniczne zdarzenia, co minimalizuje zależności i ułatwia ewolucję systemu.
+1.  **Mikroserwisy (Microservices):**
+    *   **Uzasadnienie:**
+        *   **Izolacja Domen:** Zidentyfikowane Bounded Contexts (Tożsamość i Dostęp, Zarządzanie Grafikiem, Dostępność Terminów, Rezerwacje, Powiadomienia) naturalnie mapują się na niezależne mikroserwisy. Każdy mikroserwis będzie odpowiedzialny za jeden kontekst domenowy, posiadając własną bazę danych i logikę biznesową.
+        *   **Skalowalność (NFR1):** Niezależne skalowanie każdego serwisu. Konteksty o różnym obciążeniu (np. `Dostępność Terminów` dla wyszukiwania vs. `Zarządzanie Grafikiem` dla rzadszych operacji specjalistów) mogą być skalowane oddzielnie, optymalizując zasoby.
+        *   **Wysoka Dostępność (NFR3):** Izolacja awarii. Błąd w jednym serwisie nie wpływa bezpośrednio na działanie innych.
+        *   **Niezależne Wdrażanie:** Umożliwia zespołom niezależne rozwijanie, testowanie i wdrażanie każdego serwisu, co przyspiesza cykl deweloperski.
+        *   **Elastyczność Technologiczna:** Pozwala na użycie różnych technologii i języków programowania dla poszczególnych serwisów, jeśli jest to uzasadnione (np. baza danych zoptymalizowana pod wyszukiwanie dla `Dostępność Terminów`).
 
-**Wzorce Komplementarne:**
+2.  **Architektura Zorientowana na Zdarzenia (Event-Driven Architecture - EDA):**
+    *   **Uzasadnienie:**
+        *   **Luźne Powiązanie (Loose Coupling):** Serwisy komunikują się ze sobą poprzez publikowanie i subskrybowanie zdarzeń, zamiast bezpośrednich wywołań. To zmniejsza zależności i zwiększa odporność systemu na zmiany.
+        *   **Reaktywność:** Zmiany w jednym kontekście (np. nowa rezerwacja) mogą automatycznie wyzwalać akcje w innych (np. wysłanie powiadomienia, aktualizacja dostępności).
+        *   **Wymagania Powiadomień:** Serwis `Powiadomienia` jest klasycznym przykładem konsumenta zdarzeń, reagującego na zmiany statusów rezerwacji czy grafików.
+        *   **Aktualizacja Widoków (CQRS):** Niezbędne dla kontekstu `Dostępność Terminów`, aby na bieżąco aktualizować swój model odczytu w oparciu o zdarzenia z `Zarządzania Grafikiem` i `Rezerwacji`.
 
-*   **API Gateway:** Niezbędny jako pojedynczy punkt wejścia dla wszystkich klientów (web, mobile). Odpowiada za routowanie żądań do odpowiednich mikroserwisów, obsługę uwierzytelniania/autoryzacji (wspólnie z IAM Service), zarządzanie certyfikatami SSL, ograniczanie przepustowości (rate limiting) i agregację odpowiedzi.
-*   **Architektura Zorientowana na Zdarzenia (Event-Driven Architecture):** Do asynchronicznej komunikacji między mikroserwisami. Usługi publikują zdarzenia domenowe (np. `AppointmentBooked`, `UserRegistered`) do brokera wiadomości, a inne zainteresowane usługi subskrybują te zdarzenia. Zapewnia to luźne sprzężenie, odporność i wspomaga budowanie systemów ostatecznie spójnych (eventual consistency), co jest kluczowe dla powiadomień i raportowania.
-*   **Baza Danych na Usługę (Database per Service):** Każdy mikroserwis będzie posiadał własną, niezależną bazę danych, co wzmacnia enkapsulację danych, eliminuje współdzielone zależności i umożliwia niezależne skalowanie baz danych.
-*   **CQRS (Command Query Responsibility Segregation):** Rozważany dla usługi **Reporting Service**. Ze względu na jego analityczny i raportowy charakter (US5, AC5), gdzie wymagane są optymalizacje odczytu i agregacji danych z wielu źródeł, CQRS może pozwolić na oddzielenie modelu odczytu (zoptymalizowanego pod kątem zapytań raportowych, często denormalizowanego) od modelu zapisu.
+3.  **CQRS (Command Query Responsibility Segregation) dla `Dostępność Terminów`:**
+    *   **Uzasadnienie:**
+        *   **Wydajność Wyszukiwania (NFR2):** `Dostępność Terminów` ma za zadanie efektywne wyszukiwanie i prezentowanie zagregowanych danych. Oddzielenie modelu zapisu (np. `Rezerwacje`, `Zarządzanie Grafikiem`) od modelu odczytu pozwala na optymalizację tego drugiego pod kątem zapytań.
+        *   **Złożoność Domeny:** Model zapisu dla rezerwacji i zarządzania grafikiem jest transakcyjny i skupia się na spójności danych. Model odczytu (`Dostępność Terminów`) wymaga denormalizacji i agregacji danych z wielu źródeł w celu szybkiego odpowiadania na złożone zapytania użytkownika (np. "znajdź wolne terminy dla specjalistów X i Y w danej specjalizacji").
+        *   **Niezależne Skalowanie:** Model odczytu może być skalowany niezależnie od modeli zapisu, co jest kluczowe dla wydajności wyszukiwania przy dużym obciążeniu.
+
+4.  **API Gateway:**
+    *   **Uzasadnienie:** Zapewnia pojedynczy punkt wejścia dla aplikacji klienckich, co upraszcza architekturę po stronie klienta. Obsługuje uwierzytelnianie (delegując do `Identity & Access`), autoryzację, routing żądań do odpowiednich mikroserwisów, i potencjalnie agregację odpowiedzi.
 
 ---
 
-### 2. Proponowane Komponenty/Serwisy, Ich Odpowiedzialności i Sposób Komunikacji
+### 2. Proponowane Komponenty/Serwisy, Odpowiedzialności i Komunikacja
 
-**A. Mikroserwisy (Mapped from Bounded Contexts):**
+Każdy zidentyfikowany Bounded Context zostanie zaimplementowany jako osobny mikroserwis.
 
-1.  **IAM Service (Identity & Access Management)**
-    *   **Odpowiedzialności:** Zarządzanie tożsamościami użytkowników (rejestracja, profile, dane logowania), uwierzytelnianie (generowanie/walidacja tokenów JWT), autoryzacja (role, uprawnienia - FR6), zarządzanie sesjami (NFR5 - wylogowanie po braku aktywności).
-    *   **Komunikacja:**
-        *   **Synchroniczna (REST):** Odbiera żądania uwierzytelniania/autoryzacji od API Gateway.
-        *   **Asynchroniczna (Events):** Publikuje zdarzenia `UserRegistered`, `UserRoleUpdated` do Message Broker. Subskrybuje zdarzenia `SessionTimeoutUpdated` z Configuration Service.
+1.  **API Gateway**
+    *   **Odpowiedzialności:**
+        *   Jednolity punkt dostępu dla aplikacji klienckich (Web, Mobile).
+        *   Uwierzytelnianie i autoryzacja żądań (poprzez współpracę z `Identity & Access Service`).
+        *   Routing żądań do odpowiednich mikroserwisów.
+        *   Load Balancing i zabezpieczenia (np. Rate Limiting).
+        *   Agregacja odpowiedzi (opcjonalnie, dla złożonych widoków UI).
+    *   **Sposób Komunikacji:** HTTP/REST z klientami; HTTP/REST z wewnętrznymi serwisami.
 
-2.  **Specialist Service (Specialist Management)**
-    *   **Odpowiedzialności:** Zarządzanie profilami specjalistów (CRUD), ich specjalizacjami, danymi kontaktowymi, opisem. Udostępnia funkcje wyszukiwania specjalistów (US1).
-    *   **Komunikacja:**
-        *   **Synchroniczna (REST):** Odbiera żądania z API Gateway (CRUD, wyszukiwanie). Obsługuje zapytania od Appointment Service o szczegóły specjalisty.
-        *   **Asynchroniczna (Events):** Publikuje zdarzenia `SpecialistCreated`, `SpecialistUpdated` do Message Broker. Subskrybuje `UserRegistered` z IAM (do powiązania użytkownika z rolą specjalisty).
+2.  **Identity & Access Service**
+    *   **Odpowiedzialności:**
+        *   Rejestracja i logowanie użytkowników (Pacjent, Specjalista, Administrator).
+        *   Zarządzanie profilami użytkowników (dane osobowe, kontaktowe).
+        *   Zarządzanie rolami i uprawnieniami (US6, AC6).
+        *   Wydawanie i walidacja tokenów uwierzytelniających (np. JWT).
+        *   Obsługa polityki RODO dla danych użytkowników (NFR4).
+    *   **Sposób Komunikacji:**
+        *   HTTP/REST (Command/Query): Z `API Gateway` do operacji na użytkownikach, uwierzytelniania.
+        *   Publikacja Zdarzeń (Asynchronicznie, przez Message Broker): `UserRegistered`, `UserRoleAssigned`.
 
-3.  **Scheduling Service (Scheduling & Availability)**
-    *   **Odpowiedzialności:** Zarządzanie grafikiem pracy specjalistów (dodawanie/edycja/usuwanie bloków dostępności - FR4), definicja slotów czasowych (TimeSlot), blokowanie dni wolnych/urlopów (LeavePeriod - US3). Udostępnia API do przeglądania dostępnych terminów (FR1). Oznacza sloty jako zajęte/wolne (FR5).
-    *   **Komunikacja:**
-        *   **Synchroniczna (REST):** Odbiera żądania z API Gateway (zarządzanie grafikiem, przeglądanie). Obsługuje zapytania od Appointment Service o dostępność i blokowanie terminów (FR5, AC1, AC4).
-        *   **Asynchroniczna (Events):** Publikuje zdarzenia `TimeSlotCreated`, `TimeSlotUpdated`, `LeavePeriodSet` do Message Broker. Subskrybuje `SpecialistCreated` z Specialist Service (do inicjalizacji grafiku dla nowego specjalisty). Subskrybuje `ConfigurationUpdated` z Configuration Service (np. dla domyślnych ustawień grafiku).
+3.  **Schedule Management Service**
+    *   **Odpowiedzialności:**
+        *   Tworzenie, edycja i usuwanie bloków dostępności specjalisty (US4, AC4).
+        *   Definiowanie przerw, dni wolnych, urlopów dla specjalisty.
+        *   Zarządzanie szczegółami specjalisty (specjalizacja, czas trwania domyślnej wizyty).
+        *   Jest "źródłem prawdy" dla grafiku pracy specjalisty.
+    *   **Sposób Komunikacji:**
+        *   HTTP/REST (Command/Query): Z `API Gateway` dla operacji zarządzania grafikiem.
+        *   Publikacja Zdarzeń (Asynchronicznie, przez Message Broker): `SpecialistScheduleUpdated`, `SpecialistAvailabilityChanged`.
 
-4.  **Appointment Service (Appointment Booking)**
-    *   **Odpowiedzialności:** Obsługa procesu rezerwacji wizyt (FR2), anulowania (FR3), walidacja dostępności terminów (AC1), zarządzanie statusem rezerwacji (FR5), przechowywanie powodu wizyty (US4), egzekwowanie limitu 3 aktywnych rezerwacji na użytkownika (FR7). Zapewnienie atomowości operacji rezerwacji w celu zapobiegania konfliktom (AC4).
-    *   **Komunikacja:**
-        *   **Synchroniczna (REST):** Odbiera żądania z API Gateway (rezerwacja, anulowanie). Wysyła zapytania do Scheduling Service (dostępność, blokada slotu), Specialist Service (dane specjalisty), IAM Service (autoryzacja).
-        *   **Asynchroniczna (Events):** Publikuje zdarzenia `AppointmentBooked`, `AppointmentCancelled`, `AppointmentConfirmed` do Message Broker. Subskrybuje `CancellationPolicyUpdated` z Configuration Service.
+4.  **Reservations Service**
+    *   **Odpowiedzialności:**
+        *   Tworzenie, anulowanie (US3, AC3), modyfikacja (US5, AC5) rezerwacji.
+        *   Zapobieganie konfliktom rezerwacji na tym samym terminie (AC2).
+        *   Zarządzanie cyklem życia i statusami rezerwacji (Potwierdzona, Anulowana, Zmieniona).
+        *   Gwarantowanie transakcyjności i spójności danych rezerwacji.
+    *   **Sposób Komunikacji:**
+        *   HTTP/REST (Command): Z `API Gateway` do wykonywania operacji na rezerwacjach (np. `POST /reservations`, `PUT /reservations/{id}/cancel`).
+        *   Publikacja Zdarzeń (Asynchronicznie, przez Message Broker): `ReservationCreated`, `ReservationCancelled`, `ReservationModified`.
 
-5.  **Notification Service**
-    *   **Odpowiedzialności:** Obsługa wysyłki różnego rodzaju powiadomień (e-mail, SMS) do użytkowników (US2, AC2). Zarządzanie szablonami powiadomień.
-    *   **Komunikacja:**
-        *   **Asynchroniczna (Events):** Subskrybuje zdarzenia `AppointmentBooked`, `AppointmentCancelled`, `AppointmentConfirmed` z Appointment Service. Subskrybuje `UserRegistered` z IAM Service. Wysyła powiadomienia do zewnętrznego dostawcy Email/SMS.
-        *   **Synchroniczna (REST):** Opcjonalnie może pytać IAM/Specialist Service o dane kontaktowe, jeśli nie są zawarte w zdarzeniu.
+5.  **Appointment Availability Service (CQRS Read Model)**
+    *   **Odpowiedzialności:**
+        *   Agregacja danych z `Schedule Management` i `Reservations` w celu zbudowania zoptymalizowanego widoku dostępnych terminów (US1, AC1, NFR2).
+        *   Obsługa złożonych zapytań o dostępność (filtrowanie po specjalizacji, dacie, specjaliście).
+        *   Prezentowanie aktualnego stanu wolnych slotów.
+    *   **Sposób Komunikacji:**
+        *   HTTP/REST (Query): Z `API Gateway` do wyszukiwania terminów (np. `GET /available-appointments?specialization=XYZ`).
+        *   Subskrypcja Zdarzeń (Asynchronicznie, przez Message Broker): `SpecialistScheduleUpdated`, `SpecialistAvailabilityChanged` (do aktualizacji bazowego grafiku), `ReservationCreated`, `ReservationCancelled`, `ReservationModified` (do aktualizacji zajętych slotów).
 
-6.  **Reporting Service (Reporting & Analytics)**
-    *   **Odpowiedzialności:** Agregacja danych z innych domen, przetwarzanie ich i udostępnianie w formie raportów i analiz na potrzeby administratorów (US5, AC5). Może utrzymywać własny, zoptymalizowany pod kątem odczytu model danych (CQRS Read Model).
-    *   **Komunikacja:**
-        *   **Asynchroniczna (Events):** Subskrybuje wszystkie istotne zdarzenia domenowe (np. `AppointmentBooked/Cancelled/Confirmed`, `SpecialistCreated/Updated`, `UserRegistered`) z Message Broker, aby budować swój model danych.
-        *   **Synchroniczna (REST):** Odbiera żądania generowania raportów od API Gateway.
+6.  **Notifications Service**
+    *   **Odpowiedzialności:**
+        *   Wysyłanie powiadomień (e-mail, SMS) do pacjentów i specjalistów.
+        *   Obsługa szablonów powiadomień.
+        *   Zarządzanie kolejką wysyłki i statusami dostarczenia powiadomień.
+        *   Współpraca z zewnętrznymi dostawcami usług e-mail/SMS.
+    *   **Sposób Komunikacji:**
+        *   Subskrypcja Zdarzeń (Asynchronicznie, przez Message Broker): `ReservationCreated` (potwierdzenie rezerwacji - AC2), `ReservationCancelled` (powiadomienie o anulowaniu - AC3), `ReservationModified` (powiadomienie o zmianie - AC5), itp.
+        *   Zewnętrzne API: Z dostawcami e-mail/SMS.
 
-7.  **Configuration Service (System Configuration)**
-    *   **Odpowiedzialności:** Przechowywanie i zarządzanie globalnymi ustawieniami i parametrami działania systemu (np. `session.timeout.minutes` dla NFR5, `default.cancellation.policy.rules`, adres nadawcy e-mail).
-    *   **Komunikacja:**
-        *   **Synchroniczna (REST):** Odbiera żądania z API Gateway od Administratora.
-        *   **Asynchroniczna (Events):** Publikuje zdarzenia `ConfigurationUpdated` (np. `SessionTimeoutUpdated`, `CancellationPolicyUpdated`) do Message Broker, aby inne usługi mogły reagować na zmiany.
+**Dodatkowe Komponenty Infrastruktury:**
 
-**B. Komponenty Wspierające:**
-
-*   **API Gateway:**
-    *   **Odpowiedzialności:** Jednolity punkt wejścia, routowanie, uwierzytelnianie/autoryzacja (delegacja do IAM Service), SSL Termination, rate limiting.
-    *   **Komunikacja:** Synchronizacja z IAM Service (walidacja tokenów), przekazywanie żądań do odpowiednich mikroserwisów.
-*   **Message Broker (np. Kafka, RabbitMQ):**
-    *   **Odpowiedzialności:** Niezawodna dystrybucja zdarzeń domenowych między mikroserwisami, dekuplowanie usług.
-    *   **Komunikacja:** Mikroserwisy publikują zdarzenia, inne mikroserwisy subskrybują.
-*   **Baza Danych na Usługę:** Każdy mikroserwis ma swoją bazę danych (`DB_IAM`, `DB_Specialist`, `DB_Scheduling`, `DB_Appointment`, `DB_Notification`, `DB_Reporting`, `DB_Config`).
-*   **Dostawca Email/SMS:** Zewnętrzny system do wysyłki powiadomień (integracja z Notification Service).
+*   **Message Broker (np. Apache Kafka, RabbitMQ):** Centralny element dla Event-Driven Architecture, umożliwiający asynchroniczną, niezawodną komunikację między mikroserwisami.
+*   **Databases:** Każdy mikroserwis będzie posiadał własną bazę danych, niezależną od innych, aby zapewnić izolację i niezależność wdrożeniową. `Appointment Availability Service` może używać bazy danych zoptymalizowanej pod kątem zapytań (np. PostgreSQL z widokami zmaterializowanymi, Elasticsearch, MongoDB).
 
 ---
 
 ### 3. Mapowanie Wymagań na Komponenty
 
-| Wymaganie | Komponent(y) Realizujące |
-| --- | --- |
-| **Wymagania Funkcjonalne (FR)** | |
-| FR1: Użytkownik przegląda dostępne terminy wizyt u specjalisty. | `API Gateway`, `Scheduling Service`, `Specialist Service` |
-| FR2: Użytkownik dokonuje rezerwacji wizyty u specjalisty. | `API Gateway`, `Appointment Service`, `Scheduling Service`, `IAM Service` |
-| FR3: Użytkownik anuluje rezerwację wizyty. | `API Gateway`, `Appointment Service`, `Scheduling Service` |
-| FR4: Specjalista zarządza swoim grafikiem pracy. | `API Gateway`, `Scheduling Service` |
-| FR5: System blokuje termin po dokonaniu rezerwacji. | `Appointment Service`, `Scheduling Service` |
-| FR6: System zarządza rolami i uprawnieniami użytkowników. | `IAM Service`, `API Gateway` |
-| FR7: System ogranicza liczbę aktywnych rezerwacji na użytkownika (max 3). | `Appointment Service` |
-| **Historyjki Użytkownika (US)** | |
-| US1: Wyszukiwanie specjalistów po nazwisku lub specjalizacji. | `API Gateway`, `Specialist Service` |
-| US2: Otrzymanie potwierdzenia rezerwacji na e-mail. | `Appointment Service`, `Notification Service` |
-| US3: Blokowanie dni urlopu przez specjalistę. | `API Gateway`, `Scheduling Service` |
-| US4: Podanie powodu wizyty podczas rezerwacji. | `API Gateway`, `Appointment Service` |
-| US5: Generowanie raportów przez administratora. | `API Gateway`, `Reporting Service` |
-| **Kryteria Akceptacji (AC)** | |
-| AC1: Walidacja dostępności terminu przed rezerwacją. | `Appointment Service`, `Scheduling Service` |
-| AC2: Wysyłka e-maila po zatwierdzeniu rezerwacji. | `Notification Service` |
-| AC3: Specjalista widzi swój harmonogram z rezerwacjami. | `API Gateway`, `Scheduling Service`, `Appointment Service` |
-| AC4: Zapobieganie podwójnym rezerwacjom tego samego terminu. | `Scheduling Service` (atomowe blokowanie slotów) |
-| AC5: Administrator generuje raporty z danymi o wizytach. | `API Gateway`, `Reporting Service` |
-| **Wymagania Niefunkcjonalne (NFR)** | |
-| NFR1: Skalowalność i wydajność systemu. | Architektura mikroserwisów, `API Gateway`, Event-Driven Architecture, CQRS |
-| NFR2: Odporność na awarie. | Architektura mikroserwisów, `Message Broker` |
-| NFR5: Wylogowanie po braku aktywności. | `IAM Service`, `Configuration Service`, `API Gateway` |
+| Wymaganie                                             | Komponenty Realizujące                                                                 | Uzasadnienie                                                                                                                                                                                                                                      |
+| :---------------------------------------------------- | :------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **US1: Wyszukiwanie dostępnych terminów**             | `Appointment Availability Service`                                                     | Główna odpowiedzialność tego serwisu, wykorzystuje zoptymalizowany model odczytu.                                                                                                                                                                 |
+| **AC1: Wyszukiwanie terminów dla specjalisty/spec.**  | `Appointment Availability Service`                                                     | Serwis ten agreguje i udostępnia dane w taki sposób, aby umożliwić elastyczne wyszukiwanie.                                                                                                                                                      |
+| **NFR2: Wydajność wyszukiwania**                      | `Appointment Availability Service` (CQRS Read Model)                                   | Separacja od modelu zapisu i optymalizacja pod kątem zapytań (denormalizacja, indeksowanie).                                                                                                                                                      |
+| **US2: Dokonywanie rezerwacji**                       | `Reservations Service`                                                                 | Centralna logika biznesowa dla procesu rezerwacji.                                                                                                                                                                                                |
+| **AC2: Potwierdzenie rezerwacji (limit 3 rezerwacji)** | `Reservations Service` (walidacja), `Notifications Service` (wysyłka potwierdzenia) | `Reservations Service` będzie odpowiedzialny za logikę biznesową związaną z limitami rezerwacji na pacjenta. Po pomyślnej rezerwacji `Reservations Service` wyemituje zdarzenie, które `Notifications Service` skonsumuje do wysyłki potwierdzenia. |
+| **AC2: Zapobieganie konfliktom rezerwacji**           | `Reservations Service`                                                                 | Kluczowa odpowiedzialność, zapewnienie atomowości i spójności transakcji rezerwacji.                                                                                                                                                              |
+| **US3: Anulowanie rezerwacji**                        | `Reservations Service`                                                                 | Logika biznesowa anulowania rezerwacji.                                                                                                                                                                                                           |
+| **AC3: Powiadomienia o anulowaniu**                   | `Notifications Service`                                                                | Konsumuje zdarzenie `ReservationCancelled` z `Reservations Service`.                                                                                                                                                                              |
+| **US4: Tworzenie/edycja bloków dostępności**          | `Schedule Management Service`                                                          | Główna odpowiedzialność dla specjalistów zarządzających swoim grafikiem.                                                                                                                                                                         |
+| **AC4: Zarządzanie grafikiem**                        | `Schedule Management Service`                                                          | Zapewnia pełen zestaw operacji CRUD na grafikach specjalistów.                                                                                                                                                                                     |
+| **US5: Modyfikacja rezerwacji**                       | `Reservations Service`                                                                 | Logika biznesowa zmiany istniejącej rezerwacji.                                                                                                                                                                                                   |
+| **AC5: Powiadomienia o zmianie terminu**              | `Notifications Service`                                                                | Konsumuje zdarzenie `ReservationModified` z `Reservations Service`.                                                                                                                                                                               |
+| **US6: Rejestracja/Logowanie**                        | `Identity & Access Service`                                                            | Centralne zarządzanie tożsamością i sesjami użytkowników.                                                                                                                                                                                         |
+| **AC6: Zarządzanie rolami/uprawnieniami**             | `Identity & Access Service`                                                            | Definiowanie i przypisywanie ról oraz uprawnień (np. "Specjalista" może edytować grafik).                                                                                                                                                          |
+| **NFR1: Skalowalność**                                | Cała architektura (Microservices, EDA)                                                 | Niezależne skalowanie każdego serwisu, asynchroniczność komunikacji.                                                                                                                                                                             |
+| **NFR3: Wysoka dostępność**                           | Cała architektura (Microservices, EDA)                                                 | Izolacja awarii, asynchroniczne przetwarzanie, odporność na błędy w komunikacji (przez Message Broker).                                                                                                                                          |
+| **NFR4: Bezpieczeństwo danych (RODO)**                | `Identity & Access Service`, bezpieczna komunikacja                                    | Centralizacja danych osobowych w `Identity & Access Service`, ścisła kontrola dostępu, szyfrowanie komunikacji i danych w spoczynku.                                                                                                               |
 
-### 4. Mapowanie Ról na Komponenty
+---
 
-*   **Użytkownik:** Otrzymuje potwierdzenie na e-mail (US2, AC2).
-*   **Specjalista:** Zarządza swoim grafikiem (FR4, US3), widzi harmonogram (AC3).
-*   **Administrator:** Generuje raporty (US5, AC5), konfiguruje system.
-
-### 5. Diagram Architektury
+### 4. Diagram Architektury (Mermaid.js)
 
 ```mermaid
-graph LR
-    subgraph Clients
-        UserApp[Przeglądarka/Aplikacja Użytkownika]
-    end
+C4Container
+    title Architektura Systemu Rezerwacji Wizyt
+    Enterprise_Boundary(c0, "System Rezerwacji Wizyt") {
 
-    subgraph Infrastructure
-        APIGW(API Gateway)
-        MessageBroker[Message Broker (Kafka/RabbitMQ)]
-        DB_IAM[Baza Danych IAM]
-        DB_Specialist[Baza Danych Specjalistów]
-        DB_Scheduling[Baza Danych Harmonogramów]
-        DB_Appointment[Baza Danych Rezerwacji]
-        DB_Notification[Baza Danych Powiadomień]
-        DB_Reporting[Baza Danych Raportów]
-        DB_Config[Baza Danych Konfiguracji]
-        EmailSMSProvider((Dostawca Email/SMS))
-    end
+        Container(api_gateway, "API Gateway", "Spring Cloud Gateway / Nginx", "Pojedynczy punkt wejścia dla klientów, obsługa uwierzytelniania, routingu i load balancingu.")
 
-    subgraph Microservices
-        IAMService[IAM Service]
-        SpecialistService[Specialist Service]
-        SchedulingService[Scheduling Service]
-        AppointmentService[Appointment Service]
-        NotificationService[Notification Service]
-        ReportingService[Reporting Service]
-        ConfigurationService[Configuration Service]
-    end
+        Container(identity_service, "Identity & Access Service", "Spring Boot / PostgreSQL", "Zarządzanie kontami użytkowników (Pacjent, Specjalista, Administrator), uwierzytelnianiem, autoryzacją, rolami i uprawnieniami (RODO).")
+        Container(schedule_service, "Schedule Management Service", "Spring Boot / PostgreSQL", "Definiowanie i zarządzanie godzinami pracy, dostępnością, przerwami i dniami wolnymi specjalistów.")
+        Container(reservations_service, "Reservations Service", "Spring Boot / PostgreSQL", "Obsługa cyklu życia rezerwacji: tworzenie, potwierdzanie, modyfikowanie, anulowanie, zapobieganie konfliktom.")
+        Container(availability_service, "Appointment Availability Service", "Spring Boot / Elasticsearch / PostgreSQL", "Zoptymalizowany model odczytu (CQRS) dla wyszukiwania i prezentowania wolnych terminów. Agreguje dane z Schedule Management i Reservations.")
+        Container(notifications_service, "Notifications Service", "Spring Boot / PostgreSQL", "Wysyłka powiadomień (e-mail, SMS) do użytkowników i specjalistów w odpowiedzi na zdarzenia systemowe.")
 
-    UserApp -- HTTP/S --> APIGW
+        System_Boundary(message_broker_boundary, "Message Broker") {
+            System(message_broker, "Kafka / RabbitMQ", "Asynchroniczna szyna komunikacyjna dla zdarzeń domenowych.")
+        }
 
-    APIGW -- HTTP/S (Auth) --> IAMService
-    APIGW -- HTTP/S (Specjaliści) --> SpecialistService
-    APIGW -- HTTP/S (Harmonogramy) --> SchedulingService
-    APIGW -- HTTP/S (Rezerwacje) --> AppointmentService
-    APIGW -- HTTP/S (Raporty) --> ReportingService
-    APIGW -- HTTP/S (Konfiguracja) --> ConfigurationService
+        Rel(api_gateway, identity_service, "Deleguje uwierzytelnianie i autoryzację (HTTP/REST)")
+        Rel(api_gateway, schedule_service, "Routuje żądania zarządzania grafikiem (HTTP/REST)")
+        Rel(api_gateway, reservations_service, "Routuje komendy rezerwacji (HTTP/REST)")
+        Rel(api_gateway, availability_service, "Routuje zapytania o dostępność terminów (HTTP/REST)")
 
-    IAMService -- Zarządza --> DB_IAM
-    SpecialistService -- Zarządza --> DB_Specialist
-    SchedulingService -- Zarządza --> DB_Scheduling
-    AppointmentService -- Zarządza --> DB_Appointment
-    NotificationService -- Zarządza --> DB_Notification
-    ReportingService -- Zarządza --> DB_Reporting
-    ConfigurationService -- Zarządza --> DB_Config
+        Rel(identity_service, message_broker, "Publikuje zdarzenia: UserRegistered, UserRoleAssigned (Async)")
+        Rel(schedule_service, message_broker, "Publikuje zdarzenia: SpecialistScheduleUpdated, SpecialistAvailabilityChanged (Async)")
+        Rel(reservations_service, message_broker, "Publikuje zdarzenia: ReservationCreated, ReservationCancelled, ReservationModified (Async)")
 
+        Rel(message_broker, availability_service, "Konsumuje zdarzenia do aktualizacji modelu odczytu (Async)", "SpecialistScheduleUpdated, SpecialistAvailabilityChanged, ReservationCreated, ReservationCancelled, ReservationModified")
+        Rel(message_broker, notifications_service, "Konsumuje zdarzenia do wysyłki powiadomień (Async)", "ReservationCreated, ReservationCancelled, ReservationModified")
+    }
 
-    %% Synchronous communication between services (request-response)
-    AppointmentService -- Query Specialist Info --> SpecialistService
-    AppointmentService -- Query/Reserve Time Slot --> SchedulingService
-    APIGW -- Validate Auth --> IAMService
+    Person(user, "Użytkownik (Pacjent)")
+    Person(specialist, "Specjalista")
+    Person(admin, "Administrator")
+    System_Ext(external_providers, "External Notification Providers", "Usługi zewnętrzne (np. SendGrid, Twilio)")
 
-    %% Asynchronous communication (Event-Driven) via Message Broker
-    IAMService -- Publish: UserRegistered --> MessageBroker
-    SpecialistService -- Publish: SpecialistCreated/Updated --> MessageBroker
-    SchedulingService -- Publish: TimeSlotCreated/Updated, LeavePeriodSet --> MessageBroker
-    AppointmentService -- Publish: AppointmentBooked/Cancelled/Confirmed --> MessageBroker
-    ConfigurationService -- Publish: ConfigUpdated --> MessageBroker
-
-    MessageBroker -- Subscribe: Appointment Events --> NotificationService
-    MessageBroker -- Subscribe: All Domain Events --> ReportingService
-    MessageBroker -- Subscribe: UserRegistered --> SpecialistService
-    MessageBroker -- Subscribe: SpecialistCreated --> SchedulingService
-    MessageBroker -- Subscribe: ConfigUpdated --> AppointmentService
-    MessageBroker -- Subscribe: ConfigUpdated --> IAMService
-    MessageBroker -- Subscribe: ConfigUpdated --> SchedulingService
-
-    NotificationService -- Send Email/SMS --> EmailSMSProvider
-
-    style APIGW fill:#f9f,stroke:#333,stroke-width:2px
-    style MessageBroker fill:#bbf,stroke:#333,stroke-width:2px
-    style IAMService fill:#ccf,stroke:#333,stroke-width:2px
-    style SpecialistService fill:#cfc,stroke:#333,stroke-width:2px
-    style SchedulingService fill:#ffc,stroke:#333,stroke-width:2px
-    style AppointmentService fill:#fcc,stroke:#333,stroke-width:2px
-    style NotificationService fill:#cff,stroke:#333,stroke-width:2px
-    style ReportingService fill:#eec,stroke:#333,stroke-width:2px
-    style ConfigurationService fill:#ddd,stroke:#333,stroke-width:2px
+    Rel(user, api_gateway, "Korzysta z aplikacji (Web/Mobile) (HTTP/REST)")
+    Rel(specialist, api_gateway, "Korzysta z aplikacji (Web) (HTTP/REST)")
+    Rel(admin, api_gateway, "Korzysta z panelu administracyjnego (Web) (HTTP/REST)")
+    Rel(notifications_service, external_providers, "Wysyła e-maile/SMS-y (API Calls)")
 ```
+
+---
+
+Ta architektura zapewnia wysoką skalowalność, dostępność i odporność na awarie, jednocześnie pozwalając na niezależny rozwój i wdrażanie poszczególnych domen. Wykorzystanie EDA i CQRS w kluczowych miejscach pozwala na optymalizację wydajności dla krytycznych operacji, takich jak wyszukiwanie dostępnych terminów, oraz na efektywne zarządzanie komunikacją między luźno powiązanymi serwisami. Bezpieczeństwo danych RODO jest adresowane poprzez centralizację zarządzania danymi użytkowników w `Identity & Access Service` i stosowanie bezpiecznych praktyk komunikacji.
 
 ---
 
 # 3. API i Modele Danych
 
-Doskonale, zaproponowana architektura mikroserwisów z uzupełniającymi wzorcami jest solidną podstawą. Poniżej przedstawiam kluczowe endpointy API (RESTful) i ogólne struktury baz danych dla każdego mikroserwisu, uwzględniając NFR dotyczące wydajności.
-
-### Ogólne Zasady Projektowania API i DB z Uwzględnieniem Wydajności (NFR1)
-
-1.  **Identyfikatory UUID:** Użycie UUID jako kluczy głównych (ID) we wszystkich serwisach dla lepszej dystrybucji i unikania kolizji w środowisku rozproszonym.
-2.  **Pagination i Filtrowanie:** Wszystkie endpointy zwracające kolekcje danych powinny wspierać paginację (np. `?page=0&size=20`) oraz filtrowanie (`?status=active`, `?specialistId=...`, `?startDate=...`) w celu ograniczenia ilości przesyłanych i przetwarzanych danych.
-3.  **Indeksowanie Baz Danych:** Kluczowe kolumny w bazach danych (ID, klucze obce, daty, statusy, pola często wyszukiwane) powinny być indeksowane w celu przyspieszenia operacji odczytu.
-4.  **Optymalizacja Zapytań:** Projekty baz danych uwzględniają typowe wzorce zapytań dla danego serwisu.
-5.  **Asynchroniczność:** Wykorzystanie brokera wiadomości (Message Broker) dla operacji, które nie wymagają natychmiastowej, synchronicznej odpowiedzi, co odciąża serwisy i zwiększa responsywność głównej ścieżki użytkownika.
-6.  **HTTP Status Codes:** Standardowe kody HTTP (200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 500 Internal Server Error).
+Świetnie rozpisana architektura! Skupmy się teraz na konkretach: kluczowych endpointach API (RESTful) i ogólnych strukturach baz danych dla każdego mikroserwisu, mając na uwadze wymagania wydajnościowe (NFRs).
 
 ---
 
-### Kluczowe Endpointy API i Struktury Baz Danych dla Mikroserwisów
+### Kluczowe Endpointy API i Struktury Baz Danych
 
-**1. IAM Service (Identity & Access Management)**
+### 1. API Gateway
 
-*   **Odpowiedzialności:** Zarządzanie użytkownikami, uwierzytelnianie, autoryzacja, profile.
-*   **Technologie:** Relacyjna baza danych (np. PostgreSQL) dla stabilności i integralności danych użytkowników.
+*   **Rola:** Front-end dla wszystkich mikroserwisów, routing, uwierzytelnianie, autoryzacja.
+*   **Endpointy:** Sam w sobie nie ma specyficznych endpointów domenowych, ale "mapuje" i przekierowuje żądania do wewnętrznych serwisów.
+    *   `POST /auth/login` -> `Identity & Access Service`
+    *   `POST /auth/register` -> `Identity & Access Service`
+    *   `GET /users/me` -> `Identity & Access Service`
+    *   `GET /appointments/available?date=...&specialization=...` -> `Appointment Availability Service`
+    *   `POST /reservations` -> `Reservations Service`
+    *   `GET /reservations/{id}` -> `Reservations Service`
+    *   `PUT /reservations/{id}/cancel` -> `Reservations Service`
+    *   `POST /specialist/schedule` -> `Schedule Management Service`
+    *   ...itd.
+*   **Struktura Bazy Danych:** Brak bazy danych domenowych. Może używać prostego magazynu dla konfiguracji routingu, cache tokenów, itp.
+*   **NFR (Wydajność):** Szybkie przekierowywanie, minimalny narzut. Zastosowanie cachingu dla wyników uwierzytelniania/autoryzacji (np. walidacja JWT) może znacznie zwiększyć wydajność.
 
-    **Endpointy API:**
-    *   `POST /api/v1/auth/register`
-        *   Rejestracja nowego użytkownika.
-        *   Body: `{ "username": "...", "email": "...", "password": "...", "roles": ["USER"] }`
-        *   Opublikuje zdarzenie `UserRegistered` do Message Broker.
-    *   `POST /api/v1/auth/login`
-        *   Logowanie, zwraca token JWT.
-        *   Body: `{ "username": "...", "password": "..." }`
-    *   `POST /api/v1/auth/validate-token` (wewnętrzny, dla API Gateway)
-        *   Walidacja tokena JWT, zwraca dane użytkownika i role.
-        *   Header: `Authorization: Bearer <token>`
-    *   `GET /api/v1/users/{userId}`
-        *   Pobieranie profilu użytkownika.
-    *   `PUT /api/v1/users/{userId}`
-        *   Aktualizacja profilu użytkownika (np. adres e-mail, hasło).
-    *   `PATCH /api/v1/users/{userId}/roles` (wymaga roli ADMIN)
-        *   Aktualizacja ról użytkownika.
-        *   Opublikuje zdarzenie `UserRoleUpdated`.
-    *   `GET /api/v1/users`
-        *   Pobieranie listy użytkowników (z paginacją i filtrowaniem).
-    *   `POST /api/v1/auth/password-reset-request`
-        *   Żądanie resetu hasła (wysyła token na e-mail).
-    *   `POST /api/v1/auth/password-reset`
-        *   Ustawienie nowego hasła.
+---
 
-    **Struktura Bazy Danych (DB_IAM):**
+### 2. Identity & Access Service
+
+*   **Rola:** Zarządzanie tożsamością, uwierzytelnianie, autoryzacja, profile użytkowników.
+*   **Technologia DB:** Relacyjna baza danych (np. PostgreSQL) jest dobrym wyborem ze względu na spójność danych i złożone relacje użytkownik-rola-uprawnienia.
+*   **Kluczowe Endpointy API (RESTful):**
+    *   **Autentykacja/Autoryzacja:**
+        *   `POST /auth/register`: Rejestracja nowego użytkownika.
+            *   _Request:_ `{ "email": "...", "password": "...", "role": "Patient", "profile": { ... } }`
+            *   _Response:_ `{ "userId": "uuid", "message": "User registered successfully" }`
+        *   `POST /auth/login`: Logowanie użytkownika.
+            *   _Request:_ `{ "email": "...", "password": "..." }`
+            *   _Response:_ `{ "accessToken": "JWT_TOKEN", "refreshToken": "...", "expiresIn": 3600 }`
+        *   `GET /auth/verify-token`: Walidacja tokena (głównie dla API Gateway).
+            *   _Request:_ `Authorization: Bearer <JWT_TOKEN>`
+            *   _Response:_ `{ "isValid": true, "userId": "uuid", "roles": ["Patient"] }`
+    *   **Zarządzanie Użytkownikami (Admin/Self-service):**
+        *   `GET /users/{userId}`: Pobranie profilu użytkownika.
+        *   `PUT /users/{userId}`: Aktualizacja profilu użytkownika.
+        *   `GET /users/{userId}/roles`: Pobranie ról użytkownika (Admin).
+        *   `POST /users/{userId}/roles`: Przypisanie roli użytkownikowi (Admin).
+        *   `DELETE /users/{userId}/roles/{roleId}`: Usunięcie roli użytkownikowi (Admin).
+        *   `DELETE /users/{userId}`: Usunięcie użytkownika (RODO - "prawo do bycia zapomnianym").
+*   **Ogólna Struktura Baz Danych (PostgreSQL):**
+
     ```sql
+    -- Tabela: Users (dla Pacjentów, Specjalistów, Administratorów)
     CREATE TABLE users (
-        id UUID PRIMARY KEY,
-        username VARCHAR(255) UNIQUE NOT NULL,
+        user_id UUID PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
-        first_name VARCHAR(255),
-        last_name VARCHAR(255),
-        is_active BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        phone_number VARCHAR(20),
+        date_of_birth DATE, -- Dla pacjentów
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- Tabela: Roles
     CREATE TABLE roles (
-        id UUID PRIMARY KEY,
-        name VARCHAR(50) UNIQUE NOT NULL -- np. 'USER', 'SPECIALIST', 'ADMIN'
+        role_id UUID PRIMARY KEY,
+        name VARCHAR(50) UNIQUE NOT NULL -- np. 'Patient', 'Specialist', 'Admin'
     );
 
+    -- Tabela: UserRoles (Relacja wiele do wielu)
     CREATE TABLE user_roles (
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-        role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
+        user_id UUID REFERENCES users(user_id),
+        role_id UUID REFERENCES roles(role_id),
         PRIMARY KEY (user_id, role_id)
     );
 
-    CREATE TABLE password_reset_tokens (
-        id UUID PRIMARY KEY,
-        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-        token VARCHAR(255) UNIQUE NOT NULL,
-        expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    -- Tabela: SpecialistDetails (rozszerzenie dla specjalistów, jeśli są inne dane niż w users)
+    CREATE TABLE specialist_details (
+        specialist_id UUID PRIMARY KEY REFERENCES users(user_id),
+        specialization VARCHAR(100), -- np. 'Kardiolog', 'Dermatolog'
+        default_appointment_duration_minutes INT DEFAULT 30,
+        bio TEXT,
+        office_address VARCHAR(255)
     );
-
-    -- Indeksy dla wydajności:
-    CREATE INDEX idx_users_email ON users (email);
-    CREATE INDEX idx_user_roles_user_id ON user_roles (user_id);
-    CREATE INDEX idx_user_roles_role_id ON user_roles (role_id);
-    CREATE INDEX idx_password_reset_tokens_user_id ON password_reset_tokens (user_id);
-    CREATE INDEX idx_password_reset_tokens_token ON password_reset_tokens (token);
     ```
-
-**2. Specialist Service (Specialist Management)**
-
-*   **Odpowiedzialności:** Zarządzanie profilami specjalistów, ich specjalizacjami, wyszukiwanie.
-*   **Technologie:** Relacyjna baza danych (np. PostgreSQL).
-
-    **Endpointy API:**
-    *   `POST /api/v1/specialists` (wymaga roli ADMIN)
-        *   Tworzenie nowego profilu specjalisty.
-        *   Body: `{ "userId": "...", "firstName": "...", "lastName": "...", "contactInfo": "...", "description": "...", "specialties": [...] }`
-        *   Opublikuje zdarzenie `SpecialistCreated`.
-    *   `GET /api/v1/specialists/{specialistId}`
-        *   Pobieranie szczegółów profilu specjalisty.
-    *   `PUT /api/v1/specialists/{specialistId}`
-        *   Aktualizacja profilu specjalisty.
-        *   Opublikuje zdarzenie `SpecialistUpdated`.
-    *   `DELETE /api/v1/specialists/{specialistId}` (wymaga roli ADMIN)
-        *   Usuwanie profilu specjalisty.
-        *   Opublikuje zdarzenie `SpecialistDeleted`.
-    *   `GET /api/v1/specialists`
-        *   Wyszukiwanie i przeglądanie specjalistów.
-        *   Query params: `?specialty=...", ?city=...", ?name=...", ?page=...", ?size=..."` (bardzo ważne dla wydajności FR1).
-
-    **Struktura Bazy Danych (DB_Specialist):**
-    ```sql
-    CREATE TABLE specialists (
-        id UUID PRIMARY KEY,
-        user_id UUID UNIQUE NOT NULL, -- Powiązanie z IAM Service (klucz logiczny)
-        first_name VARCHAR(255) NOT NULL,
-        last_name VARCHAR(255) NOT NULL,
-        contact_info JSONB, -- Elastyczne pole na dane kontaktowe (email, phone, address)
-        description TEXT,
-        avg_rating NUMERIC(2,1),
-        is_active BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE specialties (
-        id UUID PRIMARY KEY,
-        name VARCHAR(255) UNIQUE NOT NULL
-    );
-
-    CREATE TABLE specialist_specialties (
-        specialist_id UUID REFERENCES specialists(id) ON DELETE CASCADE,
-        specialty_id UUID REFERENCES specialties(id) ON DELETE CASCADE,
-        PRIMARY KEY (specialist_id, specialty_id)
-    );
-
-    -- Indeksy dla wydajności:
-    CREATE INDEX idx_specialists_user_id ON specialists (user_id);
-    CREATE INDEX idx_specialists_last_name ON specialists (last_name);
-    CREATE INDEX idx_specialist_specialties_specialist_id ON specialist_specialties (specialist_id);
-    CREATE INDEX idx_specialist_specialties_specialty_id ON specialist_specialties (specialty_id);
-    -- Indeks na JSONB dla szybkich zapytań po np. city:
-    CREATE INDEX idx_specialists_contact_info_city ON specialists ((contact_info->>'city'));
-    ```
-
-**3. Scheduling Service (Scheduling & Availability)**
-
-*   **Odpowiedzialności:** Zarządzanie grafikiem pracy specjalistów, slotami czasowymi, dniami wolnymi.
-*   **Technologie:** Relacyjna baza danych (np. PostgreSQL).
-
-    **Endpointy API:**
-    *   `POST /api/v1/specialists/{specialistId}/schedules` (wymaga roli SPECIALIST/ADMIN - FR4)
-        *   Dodawanie bloku dostępności lub dnia wolnego.
-        *   Body: `{ "type": "AVAILABLE" | "LEAVE", "startTime": "...", "endTime": "...", "durationMinutes": 30 }`
-        *   Opublikuje zdarzenie `ScheduleCreated` lub `LeavePeriodSet`.
-    *   `GET /api/v1/specialists/{specialistId}/schedules` (FR1)
-        *   Pobieranie grafiku specjalisty i dostępnych slotów (z paginacją i filtrowaniem po dacie).
-        *   Query params: `?startDate=...", ?endDate=...", ?status=FREE`
-    *   `PUT /api/v1/schedules/{scheduleId}` (FR4)
-        *   Aktualizacja bloku dostępności/dnia wolnego.
-        *   Opublikuje zdarzenie `ScheduleUpdated`.
-    *   `DELETE /api/v1/schedules/{scheduleId}` (FR4)
-        *   Usuwanie bloku dostępności/dnia wolnego.
-        *   Opublikuje zdarzenie `ScheduleDeleted`.
-    *   `POST /api/v1/time-slots/{timeSlotId}/block` (wewnętrzny, dla Appointment Service - FR5, AC1, AC4)
-        *   **Atomowe** blokowanie konkretnego slotu czasowego. Kluczowe dla zapobiegania overbookingowi.
-        *   Body: `{ "appointmentId": "..." }`
-        *   Zwraca 200 OK jeśli slot zablokowany, 409 Conflict jeśli już zajęty.
-        *   Opublikuje zdarzenie `TimeSlotBlocked`.
-    *   `POST /api/v1/time-slots/{timeSlotId}/unblock` (wewnętrzny, dla Appointment Service)
-        *   Odblokowanie slotu czasowego (np. po anulowaniu rezerwacji).
-        *   Opublikuje zdarzenie `TimeSlotUnblocked`.
-
-    **Struktura Bazy Danych (DB_Scheduling):**
-    ```sql
-    CREATE TYPE schedule_type AS ENUM ('AVAILABLE', 'LEAVE');
-    CREATE TYPE slot_status AS ENUM ('FREE', 'PENDING_BOOKING', 'BOOKED', 'CANCELLED');
-
-    CREATE TABLE schedules (
-        id UUID PRIMARY KEY,
-        specialist_id UUID NOT NULL, -- Powiązanie z Specialist Service (klucz logiczny)
-        type schedule_type NOT NULL,
-        start_time TIMESTAMP WITH TIME ZONE NOT NULL,
-        end_time TIMESTAMP WITH TIME ZONE NOT NULL,
-        duration_minutes INTEGER, -- Np. 30 minut
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        -- Opcjonalnie: rule_set_id UUID REFERENCES schedule_rules(id)
-    );
-
-    CREATE TABLE time_slots (
-        id UUID PRIMARY KEY,
-        schedule_id UUID REFERENCES schedules(id) ON DELETE CASCADE,
-        specialist_id UUID NOT NULL, -- Redundancja dla szybszego odpytywania
-        start_time TIMESTAMP WITH TIME ZONE NOT NULL,
-        end_time TIMESTAMP WITH TIME ZONE NOT NULL,
-        status slot_status DEFAULT 'FREE',
-        appointment_id UUID UNIQUE, -- Powiązanie z Appointment Service (klucz logiczny), UNIKALNY!
-        version INTEGER DEFAULT 0, -- Do optymistycznej blokady (AC4)
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-
-    -- Indeksy dla wydajności:
-    CREATE INDEX idx_schedules_specialist_id ON schedules (specialist_id);
-    CREATE INDEX idx_schedules_time_range ON schedules (start_time, end_time);
-    CREATE INDEX idx_time_slots_specialist_id ON time_slots (specialist_id);
-    CREATE INDEX idx_time_slots_status ON time_slots (status);
-    CREATE INDEX idx_time_slots_time_range ON time_slots (start_time, end_time);
-    CREATE UNIQUE INDEX uix_time_slots_appointment_id ON time_slots (appointment_id) WHERE appointment_id IS NOT NULL; -- dla AC4
-    ```
-    *   **NFR dla wydajności (AC4):** Pole `appointment_id` w `time_slots` z unikalnym indeksem `WHERE appointment_id IS NOT NULL` wraz z transakcją na aktualizacji statusu i `appointment_id` zapewni atomowość i zapobiegnie dublowaniu rezerwacji tego samego slotu. Optymistyczna blokada (`version`) może być użyta w logice aplikacji do radzenia sobie z równoczesnymi aktualizacjami.
-
-**4. Appointment Service (Appointment Booking)**
-
-*   **Odpowiedzialności:** Obsługa rezerwacji, anulacji, walidacja terminów, zarządzanie statusem rezerwacji.
-*   **Technologie:** Relacyjna baza danych (np. PostgreSQL).
-
-    **Endpointy API:**
-    *   `POST /api/v1/appointments` (FR2)
-        *   Tworzenie nowej rezerwacji.
-        *   Body: `{ "userId": "...", "specialistId": "...", "timeSlotId": "...", "reason": "..." }`
-        *   Wewnętrznie wywoła `SchedulingService.POST /time-slots/{timeSlotId}/block`.
-        *   Sprawdzi FR7 (limit 3 aktywnych rezerwacji).
-        *   Opublikuje zdarzenie `AppointmentBooked`.
-    *   `GET /api/v1/users/{userId}/appointments` (FR1)
-        *   Pobieranie listy rezerwacji dla danego użytkownika (z paginacją i filtrowaniem po statusie).
-        *   Query params: `?status=upcoming`
-    *   `GET /api/v1/specialists/{specialistId}/appointments` (AC3)
-        *   Pobieranie listy rezerwacji dla danego specjalisty (z paginacją i filtrowaniem po statusie).
-    *   `GET /api/v1/appointments/{appointmentId}`
-        *   Pobieranie szczegółów konkretnej rezerwacji.
-    *   `PATCH /api/v1/appointments/{appointmentId}/cancel` (FR3)
-        *   Anulowanie rezerwacji.
-        *   Body: `{ "cancellationReason": "..." }`
-        *   Wewnętrznie wywoła `SchedulingService.POST /time-slots/{timeSlotId}/unblock`.
-        *   Opublikuje zdarzenie `AppointmentCancelled`.
-    *   `PATCH /api/v1/appointments/{appointmentId}/confirm`
-        *   Potwierdzenie rezerwacji (np. przez specjalistę).
-        *   Opublikuje zdarzenie `AppointmentConfirmed`.
-
-    **Struktura Bazy Danych (DB_Appointment):**
-    ```sql
-    CREATE TYPE appointment_status AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED');
-
-    CREATE TABLE appointments (
-        id UUID PRIMARY KEY,
-        user_id UUID NOT NULL, -- Powiązanie z IAM Service (klucz logiczny)
-        specialist_id UUID NOT NULL, -- Powiązanie z Specialist Service (klucz logiczny)
-        time_slot_id UUID UNIQUE NOT NULL, -- Powiązanie z Scheduling Service (klucz logiczny), UNIKALNY!
-        reason TEXT NOT NULL,
-        status appointment_status DEFAULT 'PENDING',
-        booking_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        cancellation_reason TEXT,
-        cancelled_at TIMESTAMP WITH TIME ZONE,
-        confirmed_at TIMESTAMP WITH TIME ZONE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-
-    -- Indeksy dla wydajności:
-    CREATE INDEX idx_appointments_user_id ON appointments (user_id);
-    CREATE INDEX idx_appointments_specialist_id ON appointments (specialist_id);
-    CREATE INDEX idx_appointments_status ON appointments (status);
-    CREATE INDEX idx_appointments_time_slot_id ON appointments (time_slot_id);
-    ```
-    *   **NFR dla wydajności (FR7):** Liczba aktywnych rezerwacji dla użytkownika może być szybko sprawdzana za pomocą `COUNT(*) WHERE user_id = ? AND status IN ('PENDING', 'CONFIRMED')`.
-
-**5. Notification Service**
-
-*   **Odpowiedzialności:** Wysyłka powiadomień (email, SMS).
-*   **Technologie:** Relacyjna baza danych (np. PostgreSQL) do przechowywania historii powiadomień i szablonów.
-
-    **Endpointy API:** (Głównie event-driven, API raczej dla zarządzania szablonami/testów)
-    *   `GET /api/v1/notifications/templates`
-        *   Pobieranie dostępnych szablonów powiadomień.
-    *   `PUT /api/v1/notifications/templates/{templateId}`
-        *   Aktualizacja szablonu powiadomienia.
-    *   `POST /api/v1/notifications/send` (dla testów lub administracji)
-        *   Wysyłka natychmiastowego powiadomienia.
-        *   Body: `{ "target": "email|sms", "recipient": "...", "templateName": "...", "data": {} }`
-
-    **Struktura Bazy Danych (DB_Notification):**
-    ```sql
-    CREATE TYPE notification_channel AS ENUM ('EMAIL', 'SMS', 'PUSH');
-    CREATE TYPE notification_status AS ENUM ('PENDING', 'SENT', 'FAILED');
-
-    CREATE TABLE notification_templates (
-        id UUID PRIMARY KEY,
-        name VARCHAR(255) UNIQUE NOT NULL,
-        channel notification_channel NOT NULL,
-        subject VARCHAR(512), -- Dla e-mail
-        body_template TEXT NOT NULL, -- Treść szablonu (np. Handlebars, Jinja)
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE sent_notifications (
-        id UUID PRIMARY KEY,
-        user_id UUID, -- Opcjonalnie, jeśli powiadomienie jest do konkretnego użytkownika
-        recipient VARCHAR(255) NOT NULL, -- Adres email/numer telefonu
-        channel notification_channel NOT NULL,
-        template_name VARCHAR(255) REFERENCES notification_templates(name) ON DELETE SET NULL,
-        subject VARCHAR(512),
-        body TEXT NOT NULL,
-        status notification_status DEFAULT 'PENDING',
-        sent_at TIMESTAMP WITH TIME ZONE,
-        failed_reason TEXT,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-
-    -- Indeksy dla wydajności:
-    CREATE INDEX idx_sent_notifications_user_id ON sent_notifications (user_id);
-    CREATE INDEX idx_sent_notifications_recipient ON sent_notifications (recipient);
-    CREATE INDEX idx_sent_notifications_status ON sent_notifications (status);
-    CREATE INDEX idx_sent_notifications_created_at ON sent_notifications (created_at);
-    ```
-
-**6. Reporting Service (Reporting & Analytics)**
-
-*   **Odpowiedzialności:** Agregacja i udostępnianie raportów.
-*   **Technologie:** Relacyjna baza danych (np. PostgreSQL) lub NoSQL (np. MongoDB) dla modelu odczytu CQRS. Poniżej przykład dla PostgreSQL.
-
-    **Endpointy API:**
-    *   `GET /api/v1/reports/daily-bookings` (US5, AC5)
-        *   Raport dziennych rezerwacji.
-        *   Query params: `?startDate=...", ?endDate=...", ?specialistId=..."`
-    *   `GET /api/v1/reports/specialist-performance` (US5, AC5)
-        *   Raport wydajności specjalistów.
-        *   Query params: `?month=...", ?year=...", ?specialty=..."`
-    *   `GET /api/v1/reports/user-activity`
-        *   Raport aktywności użytkowników.
-        *   Query params: `?startDate=...", ?endDate=..."`
-
-    **Struktura Bazy Danych (DB_Reporting - CQRS Read Model):**
-    ```sql
-    -- Dane są denormalizowane i agregowane z wydarzeń domenowych
-    -- Powiązania z innymi serwisami są przechowywane jako ID, ale dane wyświetlane
-    -- w raporcie (np. imię specjalisty) są zdenormalizowane bezpośrednio w tabeli.
-
-    CREATE TABLE daily_booking_summary (
-        id UUID PRIMARY KEY,
-        report_date DATE NOT NULL,
-        specialist_id UUID NOT NULL,
-        specialist_name VARCHAR(255), -- Denormalized
-        booked_appointments INTEGER DEFAULT 0,
-        cancelled_appointments INTEGER DEFAULT 0,
-        completed_appointments INTEGER DEFAULT 0,
-        total_revenue NUMERIC(10,2) DEFAULT 0.00, -- Jeśli system będzie miał cennik
-        last_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE (report_date, specialist_id)
-    );
-
-    CREATE TABLE specialist_performance_metrics (
-        id UUID PRIMARY KEY,
-        specialist_id UUID NOT NULL,
-        specialist_name VARCHAR(255), -- Denormalized
-        month INTEGER NOT NULL,
-        year INTEGER NOT NULL,
-        total_appointments INTEGER DEFAULT 0,
-        avg_rating NUMERIC(2,1),
-        total_earnings NUMERIC(10,2) DEFAULT 0.00,
-        last_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE (specialist_id, month, year)
-    );
-
-    CREATE TABLE user_engagement (
-        id UUID PRIMARY KEY,
-        user_id UUID NOT NULL,
-        username VARCHAR(255), -- Denormalized
-        total_bookings INTEGER DEFAULT 0,
-        total_cancellations INTEGER DEFAULT 0,
-        last_booking_date TIMESTAMP WITH TIME ZONE,
-        first_booking_date TIMESTAMP WITH TIME ZONE,
-        last_updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE (user_id)
-    );
-
-    -- Indeksy dla wydajności:
-    CREATE INDEX idx_daily_booking_summary_date ON daily_booking_summary (report_date);
-    CREATE INDEX idx_daily_booking_summary_specialist ON daily_booking_summary (specialist_id);
-    CREATE INDEX idx_specialist_performance_specialist ON specialist_performance_metrics (specialist_id);
-    CREATE INDEX idx_specialist_performance_month_year ON specialist_performance_metrics (year, month);
-    CREATE INDEX idx_user_engagement_user_id ON user_engagement (user_id);
-    ```
-    *   **NFR dla wydajności (CQRS):** Te tabele są zoptymalizowane pod kątem szybkiego odczytu i agregacji. Dane są wstępnie przetwarzane i denormalizowane, co minimalizuje złożone JOINy w czasie generowania raportów. Aktualizacja tych tabel następuje asynchronicznie poprzez konsumowanie zdarzeń z Message Broker.
-
-**7. Configuration Service (System Configuration)**
-
-*   **Odpowiedzialności:** Przechowywanie i zarządzanie globalnymi ustawieniami systemu.
-*   **Technologie:** Relacyjna baza danych (np. PostgreSQL).
-
-    **Endpointy API:**
-    *   `GET /api/v1/config` (wymaga roli ADMIN)
-        *   Pobieranie wszystkich parametrów konfiguracyjnych.
-    *   `GET /api/v1/config/{key}`
-        *   Pobieranie wartości dla konkretnego klucza konfiguracyjnego.
-    *   `PUT /api/v1/config/{key}` (wymaga roli ADMIN - NFR5)
-        *   Aktualizacja wartości parametru konfiguracyjnego.
-        *   Body: `{ "value": "...", "description": "..." }`
-        *   Opublikuje zdarzenie `ConfigurationUpdated` (np. `SessionTimeoutUpdated`, `CancellationPolicyUpdated`).
-
-    **Struktura Bazy Danych (DB_Config):**
-    ```sql
-    CREATE TYPE config_value_type AS ENUM ('STRING', 'INTEGER', 'BOOLEAN', 'JSON');
-
-    CREATE TABLE configurations (
-        id UUID PRIMARY KEY,
-        config_key VARCHAR(255) UNIQUE NOT NULL,
-        config_value TEXT NOT NULL,
-        value_type config_value_type DEFAULT 'STRING',
-        description TEXT,
-        last_updated_by UUID, -- Powiązanie z IAM Service (klucz logiczny)
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-
-    -- Indeksy dla wydajności:
-    CREATE INDEX idx_configurations_config_key ON configurations (config_key);
-    ```
+*   **NFR (Wydajność):**
+    *   Indeksy na `email` w `users` dla szybkiego logowania.
+    *   Użycie JWT tokenów: Po początkowym uwierzytelnieniu, tokeny są weryfikowane bez konieczności odpytywania bazy danych, co odciąża serwis i bazę. API Gateway może sam weryfikować podpis JWT.
+    *   Optymalizacja zapytań do ról i uprawnień, np. poprzez złączenia w ramach jednego zapytania.
 
 ---
 
-### Podsumowanie i NFR
+### 3. Schedule Management Service
 
-*   **NFR1 (Skalowalność i Wydajność):**
-    *   **Microservices Architecture, Database per Service:** Pozwala na niezależne skalowanie każdego serwisu i jego bazy danych. Usługi o dużym obciążeniu (np. `Scheduling`, `Appointment`) mogą być skalowane w poziomie bez wpływu na inne.
-    *   **API Gateway:** Chroni backend, agreguje, zarządza ruchami, rozładowując obciążenie z poszczególnych serwisów. Rate limiting zapobiega nadmiernemu obciążeniu.
-    *   **Event-Driven Architecture:** Asynchroniczne procesy (powiadomienia, raportowanie) są odseparowane od głównego przepływu rezerwacji, zwiększając responsywność i odporność. Zdarzenia mogą być przetwarzane w tle, co jest idealne dla zadań wymagających czasu.
-    *   **CQRS w Reporting Service:** Oddzielenie modelu zapisu od odczytu pozwala na optymalizację baz danych raportowych pod kątem wydajności zapytań (np. poprzez denormalizację i wstępne agregowanie danych), niezależnie od wymagań transakcyjnych.
-    *   **Indeksowanie, Paginacja, Filtrowanie:** Wdrożenie tych technik w bazach danych i API jest kluczowe dla wydajnego pobierania i przetwarzania danych, szczególnie przy dużej liczbie rekordów.
-    *   **Atomowe operacje (AC4):** Użycie mechanizmów bazodanowych (unikalne indeksy z warunkami, transakcje) w `Scheduling Service` zapewnia spójność i zapobiega konfliktom rezerwacji, co jest krytyczne dla integralności danych, nawet pod dużym obciążeniem.
+*   **Rola:** Zarządzanie grafikami pracy specjalistów.
+*   **Technologia DB:** Relacyjna baza danych (np. PostgreSQL) dla spójności i łatwości zarządzania blokami czasowymi.
+*   **Kluczowe Endpointy API (RESTful):**
+    *   **Zarządzanie grafikiem:**
+        *   `POST /specialists/{specialistId}/schedule/blocks`: Dodanie nowego bloku dostępności.
+            *   _Request:_ `{ "startTime": "...", "endTime": "...", "type": "AVAILABLE"|"BREAK"|"HOLIDAY" }`
+            *   _Response:_ `{ "blockId": "uuid", ... }`
+        *   `PUT /specialists/{specialistId}/schedule/blocks/{blockId}`: Edycja bloku dostępności.
+        *   `DELETE /specialists/{specialistId}/schedule/blocks/{blockId}`: Usunięcie bloku dostępności.
+        *   `GET /specialists/{specialistId}/schedule?startDate=...&endDate=...`: Pobranie grafiku specjalisty dla zakresu dat.
+    *   **Zarządzanie szczegółami specjalisty (jeśli nie jest w Identity Service):**
+        *   `GET /specialists/{specialistId}`: Pobranie szczegółów specjalisty.
+        *   `PUT /specialists/{specialistId}`: Aktualizacja szczegółów specjalisty.
+*   **Ogólna Struktura Baz Danych (PostgreSQL):**
 
-*   **NFR2 (Odporność):**
-    *   **Microservices, Event-Driven:** Awaria jednego serwisu (np. `Notification Service`) nie blokuje działania innych (np. `Appointment Service`). Message Broker buforuje zdarzenia, które zostaną przetworzone po przywróceniu sprawności.
+    ```sql
+    -- Tabela: SpecialistSchedule (Bloki dostępności specjalistów)
+    CREATE TABLE specialist_schedule (
+        block_id UUID PRIMARY KEY,
+        specialist_id UUID NOT NULL, -- FK do Identity & Access Service. Można przechowywać jako UUID lub referencję
+        start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+        end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+        block_type VARCHAR(50) NOT NULL, -- np. 'AVAILABLE', 'BREAK', 'HOLIDAY', 'UNAVAILABLE'
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT chk_end_time_after_start_time CHECK (end_time > start_time)
+    );
 
-*   **NFR5 (Wylogowanie po braku aktywności):**
-    *   `Configuration Service` przechowuje `session.timeout.minutes`.
-    *   `IAM Service` odpowiedzialny jest za zarządzanie sesjami (np. w oparciu o czas ważności tokenów JWT lub dodatkowy mechanizm sesji). Może odczytywać wartość timeoutu z `Configuration Service` (poprzez API lub subskrypcję zdarzeń `ConfigurationUpdated`). API Gateway (lub logika front-endu) może implementować odświeżanie tokenów lub wymuszać ponowne logowanie po upływie skonfigurowanego czasu.
+    -- Indeksy
+    CREATE INDEX idx_schedule_specialist_id ON specialist_schedule (specialist_id);
+    CREATE INDEX idx_schedule_time_range ON specialist_schedule (start_time, end_time);
+    ```
+*   **NFR (Wydajność):**
+    *   Indeksy na `specialist_id` oraz na zakresach dat (`start_time`, `end_time`) są kluczowe dla szybkiego pobierania grafików.
+    *   Operacje na grafiku są mniej częste niż wyszukiwanie terminów, więc bazowa wydajność CRUD powinna być wystarczająca.
 
-Ta szczegółowa propozycja stanowi solidną podstawę do dalszego rozwoju systemu, zapewniając zarówno funkcjonalność, jak i spełnienie wymagań niefunkcjonalnych.
+---
+
+### 4. Reservations Service
+
+*   **Rola:** Zarządzanie rezerwacjami.
+*   **Technologia DB:** Relacyjna baza danych (np. PostgreSQL) ze względu na silne wymagania transakcyjności i spójności (ACID).
+*   **Kluczowe Endpointy API (RESTful):**
+    *   **Zarządzanie rezerwacjami:**
+        *   `POST /reservations`: Utworzenie nowej rezerwacji.
+            *   _Request:_ `{ "patientId": "...", "specialistId": "...", "appointmentTime": "...", "durationMinutes": 30 }`
+            *   _Response:_ `{ "reservationId": "uuid", "status": "PENDING"|"CONFIRMED", ... }`
+        *   `GET /reservations/{reservationId}`: Pobranie szczegółów rezerwacji.
+        *   `PUT /reservations/{reservationId}/cancel`: Anulowanie rezerwacji.
+        *   `PUT /reservations/{reservationId}/modify`: Modyfikacja terminu rezerwacji (wymaga walidacji dostępności).
+        *   `GET /patients/{patientId}/reservations`: Pobranie listy rezerwacji dla pacjenta.
+        *   `GET /specialists/{specialistId}/reservations?date=...`: Pobranie listy rezerwacji dla specjalisty.
+*   **Ogólna Struktura Baz Danych (PostgreSQL):**
+
+    ```sql
+    -- Tabela: Reservations
+    CREATE TABLE reservations (
+        reservation_id UUID PRIMARY KEY,
+        patient_id UUID NOT NULL, -- FK do Identity & Access Service
+        specialist_id UUID NOT NULL, -- FK do Identity & Access Service
+        appointment_time TIMESTAMP WITH TIME ZONE NOT NULL,
+        duration_minutes INT NOT NULL,
+        status VARCHAR(50) NOT NULL, -- np. 'PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (specialist_id, appointment_time) -- Zapobiega konfliktom: jeden specjalista, jeden termin
+    );
+
+    -- Indeksy
+    CREATE INDEX idx_reservations_patient_id ON reservations (patient_id);
+    CREATE INDEX idx_reservations_specialist_id ON reservations (specialist_id);
+    CREATE INDEX idx_reservations_appointment_time ON reservations (appointment_time);
+    ```
+*   **NFR (Wydajność):**
+    *   **Kluczowe dla AC2 (Zapobieganie konfliktom):** `UNIQUE (specialist_id, appointment_time)` zapewnia unikalność, co jest wydajniejsze niż blokowanie w logice aplikacji przy dużej liczbie jednoczesnych rezerwacji. Baza danych zarządza tym atomowo.
+    *   Indeksy na `patient_id` i `specialist_id` dla szybkiego pobierania listy rezerwacji.
+    *   Zastosowanie transakcji (ACID) dla operacji tworzenia/modyfikacji/anulowania. Optymistyczne blokowanie (optimistic locking) na poziomie rekordu (np. z polem `version` lub `updated_at`) dla operacji modyfikacji może zminimalizować blokady bazy danych.
+
+---
+
+### 5. Appointment Availability Service (CQRS Read Model)
+
+*   **Rola:** Optymalne wyszukiwanie i prezentowanie wolnych terminów.
+*   **Technologia DB:** Zoptymalizowana pod kątem zapytań i agregacji.
+    *   **PostgreSQL z widokami zmaterializowanymi:** Dobry start, jeśli dane nie są bardzo duże i można tolerować niewielkie opóźnienia w synchronizacji.
+    *   **Elasticsearch / Solr:** Idealny dla złożonych zapytań full-text i filtrowania, skalowalny horyzontalnie, bardzo szybki dla odczytów (NFR2).
+    *   **MongoDB (lub inna NoSQL dokumentowa):** Elastyczny schemat dla denormalizowanych danych, dobra wydajność dla odczytów.
+*   **Kluczowe Endpointy API (RESTful):**
+    *   **Wyszukiwanie dostępności:**
+        *   `GET /available-appointments?date=YYYY-MM-DD&specialization=Kardiolog&specialistId=...&minDuration=30`: Pobranie wolnych terminów.
+            *   _Request:_ Parametry zapytania (`query parameters`).
+            *   _Response:_ `{ "specialistId": "uuid", "specialistName": "...", "specialization": "...", "availableSlots": [ { "startTime": "...", "endTime": "..." } ] }`
+        *   `GET /available-appointments/summary?startDate=...&endDate=...&specialization=...`: Podsumowanie dostępności (np. dla całego dnia, ile wolnych slotów).
+*   **Ogólna Struktura Baz Danych (Elasticsearch przykład, dla wydajności NFR2):**
+
+    W Elasticsearch dane byłyby indeksowane jako dokumenty, np. `available_slots`. Każdy dokument reprezentowałby pojedynczy, dostępny slot czasowy lub zagregowany dzień dla specjalisty.
+
+    ```json
+    -- Dokument w indeksie `available_slots`
+    {
+      "slot_id": "uuid",
+      "specialist_id": "uuid",
+      "specialist_name": "Dr. Anna Nowak",
+      "specialization": "Kardiolog",
+      "start_time": "2023-10-27T10:00:00+01:00",
+      "end_time": "2023-10-27T10:30:00+01:00",
+      "duration_minutes": 30,
+      "date": "2023-10-27",
+      "is_booked": false, // Może być używane do szybkiej aktualizacji statusu
+      "version": 1 // Dla optymistycznego blokowania/aktualizacji
+    }
+
+    -- Alternatywny widok zagregowany (dla zapytań o cały dzień)
+    {
+      "day_summary_id": "uuid",
+      "specialist_id": "uuid",
+      "date": "2023-10-27",
+      "specialization": "Kardiolog",
+      "total_slots": 16,
+      "booked_slots": 5,
+      "available_slots_details": [
+        {"start_time": "...", "end_time": "..."},
+        // ... tylko wolne sloty, lub lista z flagą is_booked
+      ]
+    }
+    ```
+*   **Mechanizm synchronizacji (z EDA):**
+    *   Gdy `Schedule Management Service` publikuje `SpecialistScheduleUpdated`, `Appointment Availability Service` przetwarza to zdarzenie i aktualizuje/rekonstruuje swoje indeksy/widoki dla tego specjalisty.
+    *   Gdy `Reservations Service` publikuje `ReservationCreated`, `ReservationCancelled`, `ReservationModified`, `Appointment Availability Service` odpowiednio oznacza slot jako zajęty/wolny w swoim modelu odczytu (np. aktualizuje pole `is_booked` lub usuwa/dodaje dokument slotu).
+*   **NFR (Wydajność):**
+    *   **Kluczowe dla NFR2 (Wydajność wyszukiwania):** Denormalizacja danych, dedykowane indeksy (np. w Elasticsearch) na `specialization`, `date`, `start_time` i `specialist_id` są fundamentalne.
+    *   Elasticsearch oferuje zaawansowane możliwości filtrowania i agregacji (np. `range queries`, `term queries`, `boolean queries`), co jest idealne dla złożonych zapytań o dostępność.
+    *   Model odczytu jest odseparowany od zapisu, więc jego skalowanie horyzontalne jest niezależne i bardzo efektywne. Można mieć wiele replik `Appointment Availability Service` i jego bazy danych, aby obsługiwać duży ruch odczytowy.
+
+---
+
+### 6. Notifications Service
+
+*   **Rola:** Wysyłka powiadomień.
+*   **Technologia DB:** Relacyjna baza danych (np. PostgreSQL) do przechowywania logów powiadomień i szablonów.
+*   **Kluczowe Endpointy API (RESTful):**
+    *   **Zarządzanie Szablonami (Admin):**
+        *   `GET /notification-templates`: Pobranie listy szablonów.
+        *   `POST /notification-templates`: Dodanie nowego szablonu.
+        *   `PUT /notification-templates/{id}`: Edycja szablonu.
+    *   **Pobieranie Historii (Admin/Użytkownik):**
+        *   `GET /notifications?userId=...`: Pobranie historii wysłanych powiadomień dla użytkownika.
+        *   `GET /notifications/{id}`: Pobranie szczegółów powiadomienia.
+*   **Ogólna Struktura Baz Danych (PostgreSQL):**
+
+    ```sql
+    -- Tabela: NotificationTemplates
+    CREATE TABLE notification_templates (
+        template_id UUID PRIMARY KEY,
+        name VARCHAR(100) UNIQUE NOT NULL, -- np. 'RESERVATION_CONFIRMATION', 'RESERVATION_CANCELLED'
+        subject_template TEXT NOT NULL,
+        body_template TEXT NOT NULL,
+        channel VARCHAR(50) NOT NULL -- np. 'EMAIL', 'SMS'
+    );
+
+    -- Tabela: NotificationLogs
+    CREATE TABLE notification_logs (
+        log_id UUID PRIMARY KEY,
+        user_id UUID, -- NULL dla powiadomień bez konkretnego użytkownika (np. do admina)
+        template_id UUID REFERENCES notification_templates(template_id),
+        channel VARCHAR(50) NOT NULL,
+        recipient VARCHAR(255) NOT NULL, -- Adres email lub numer telefonu
+        subject TEXT,
+        body TEXT,
+        status VARCHAR(50) NOT NULL, -- np. 'PENDING', 'SENT', 'FAILED', 'DELIVERED'
+        sent_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Indeksy
+    CREATE INDEX idx_notification_logs_user_id ON notification_logs (user_id);
+    CREATE INDEX idx_notification_logs_status ON notification_logs (status);
+    ```
+*   **NFR (Wydajność):**
+    *   Przetwarzanie powiadomień jest asynchroniczne i napędzane zdarzeniami, co minimalizuje wpływ na wydajność innych serwisów.
+    *   Logowanie powiadomień nie jest krytyczną ścieżką dla użytkownika, więc inserty do `notification_logs` mogą być nieco wolniejsze.
+    *   Można zastosować kolejkę wiadomości do zewnętrznych dostawców (np. SendGrid, Twilio), aby buforować i wysyłać z optymalną przepustowością, unikając blokowania Notification Service.
+
+---
+
+### Podsumowanie NFR i Wydajności
+
+*   **Skalowalność (NFR1):** Architektura mikroserwisowa pozwala na niezależne skalowanie każdego serwisu. `Appointment Availability Service` jako model odczytu CQRS jest kluczowym kandydatem do intensywnego skalowania horyzontalnego.
+*   **Wydajność Wyszukiwania (NFR2):** Zastosowanie CQRS w `Appointment Availability Service` z dedykowaną, zoptymalizowaną bazą danych (np. Elasticsearch) i agresywnym indeksowaniem jest bezpośrednią odpowiedzią na to NFR.
+*   **Wysoka Dostępność (NFR3):** Izolacja serwisów i asynchroniczna komunikacja przez Message Broker zwiększa odporność na awarie. Baza danych każdego serwisu może być skonfigurowana z replikacją i failoverem.
+*   **Bezpieczeństwo danych (RODO) (NFR4):** Centralizacja danych użytkowników w `Identity & Access Service`, szyfrowanie danych w spoczynku i w transporcie (TLS/SSL dla HTTP/REST i Message Broker). Ścisła kontrola dostępu za pomocą ról i uprawnień zarządzanych przez `Identity & Access Service`.
+
+Ta szczegółowa propozycja endpointów i struktur baz danych stanowi solidną podstawę dla dalszego rozwoju systemu, zapewniając jednocześnie odpowiedź na kluczowe wymagania niefunkcjonalne.
