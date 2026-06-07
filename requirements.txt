@@ -1,1 +1,7 @@
-pytest==8.2.2
+fastapi
+uvicorn
+sqlalchemy
+httpx
+pyjwt
+pydantic
+python-dateutil
