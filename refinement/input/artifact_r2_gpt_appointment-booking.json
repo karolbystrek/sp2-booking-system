@@ -1,0 +1,177 @@
+{
+  "system_goal": "System umożliwia użytkownikom rezerwację, przeglądanie i anulowanie wizyt u specjalistów oraz wspiera specjalistów w zarządzaniu grafikiem. Celem systemu jest bezpieczna i skalowalna obsługa terminów, rezerwacji i zmian harmonogramu przy uwzględnieniu ról użytkowników, ograniczeń czasowych oraz wyjątków od konfliktów rezerwacji.",
+  "roles": [
+    {
+      "name": "Użytkownik",
+      "permissions": [
+        "przeglądanie dostępnych terminów",
+        "dokonywanie rezerwacji wizyt",
+        "anulowanie własnych rezerwacji w dozwolonych warunkach"
+      ]
+    },
+    {
+      "name": "Specjalista",
+      "permissions": [
+        "zarządzanie własnym grafikiem",
+        "modyfikowanie dostępnych terminów",
+        "modyfikowanie grafiku także dla istniejących rezerwacji",
+        "przeglądanie rezerwacji dotyczących własnego grafiku"
+      ]
+    },
+    {
+      "name": "Administrator",
+      "permissions": [
+        "zarządzanie rolami użytkowników",
+        "konfiguracja zasad rezerwacji i anulowania",
+        "obsługa wyjątków od konfliktów rezerwacji",
+        "nadzór nad skalowalnością i poprawnym działaniem systemu"
+      ]
+    }
+  ],
+  "functional_requirements": [
+    {
+      "id": "FR1",
+      "description": "System musi umożliwiać użytkownikowi przeglądanie dostępnych terminów wizyt u specjalistów."
+    },
+    {
+      "id": "FR2",
+      "description": "System musi umożliwiać użytkownikowi dokonanie rezerwacji wybranego dostępnego terminu."
+    },
+    {
+      "id": "FR3",
+      "description": "System musi umożliwiać użytkownikowi anulowanie własnej rezerwacji najpóźniej do 24 godzin przed zaplanowanym terminem."
+    },
+    {
+      "id": "FR4",
+      "description": "Po anulowaniu wizyty termin automatycznie wraca do puli dostępnych terminów."
+    },
+    {
+      "id": "FR5",
+      "description": "System musi zapobiegać podwójnej rezerwacji: ten sam termin nie może zostać zarezerwowany przez więcej niż jednego użytkownika."
+    },
+    {
+      "id": "FR6",
+      "description": "System musi umożliwiać obsługę wyjątków od standardowych reguł konfliktu rezerwacji w określonych przypadkach."
+    },
+    {
+      "id": "FR7",
+      "description": "System musi umożliwiać specjaliście zarządzanie własnym grafikiem, w tym dodawanie, usuwanie i zmianę dostępnych terminów."
+    },
+    {
+      "id": "FR8",
+      "description": "System musi umożliwiać specjaliście modyfikowanie grafiku także wtedy, gdy istnieją już powiązane rezerwacje."
+    },
+    {
+      "id": "FR9",
+      "description": "Każda wizyta musi posiadać jeden ze zdefiniowanych statusów: AVAILABLE, BOOKED, CANCELLED, COMPLETED."
+    },
+    {
+      "id": "FR10",
+      "description": "Jeden użytkownik może mieć maksymalnie 3 aktywne rezerwacje. Administrator może w uzasadnionych przypadkach zezwolić na przekroczenie tego limitu."
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR1",
+      "description": "Operacja rezerwacji powinna zostać obsłużona w czasie krótszym niż 1 sekunda przy standardowym obciążeniu."
+    },
+    {
+      "id": "NFR2",
+      "description": "System powinien zapewniać spójność danych i odporność na współbieżne próby rezerwacji tego samego terminu."
+    },
+    {
+      "id": "NFR3",
+      "description": "System powinien skalować się wraz ze wzrostem liczby użytkowników, specjalistów, grafików i rezerwacji bez istotnego pogorszenia wydajności."
+    },
+    {
+      "id": "NFR4",
+      "description": "Dostęp do operacji rezerwacji i anulowania wymaga uwierzytelnienia użytkownika."
+    },
+    {
+      "id": "NFR5",
+      "description": "System powinien rejestrować operacje związane z rezerwacjami i anulowaniami w logu audytowym ze znacznikiem czasu w celu rozliczalności."
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US1",
+      "description": "Jako użytkownik chcę przeglądać dostępne terminy u specjalistów, aby wybrać dogodny termin wizyty."
+    },
+    {
+      "id": "US2",
+      "description": "Jako użytkownik chcę zarezerwować dostępny termin wizyty, aby umówić spotkanie ze specjalistą."
+    },
+    {
+      "id": "US3",
+      "description": "Jako użytkownik chcę anulować własną rezerwację na minimum 24h przed terminem, aby móc zrezygnować z wizyty."
+    },
+    {
+      "id": "US4",
+      "description": "Jako specjalista chcę zarządzać własnym grafikiem, aby udostępniać i aktualizować terminy wizyt."
+    },
+    {
+      "id": "US5",
+      "description": "Jako specjalista chcę modyfikować grafik także dla istniejących rezerwacji, aby dostosować harmonogram do zmian organizacyjnych."
+    },
+    {
+      "id": "US6",
+      "description": "Jako administrator chcę konfigurować zasady rezerwacji i anulowania, aby dostosować działanie systemu do polityki organizacji."
+    },
+    {
+      "id": "US7",
+      "description": "Jako administrator chcę obsługiwać wyjątki od konfliktów rezerwacji, aby umożliwiać niestandardowe przypadki zgodnie z obowiązującymi zasadami."
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC1",
+      "given": "użytkownik jest zalogowany i w systemie istnieją opublikowane wolne terminy specjalistów",
+      "when": "użytkownik potwierdza rezerwację terminu wizyty",
+      "then": "system tworzy rezerwację i zmienia status terminu na BOOKED"
+    },
+    {
+      "id": "AC2",
+      "given": "dwóch użytkowników jednocześnie próbuje zarezerwować ten sam termin",
+      "when": "użytkownicy wysyłają żądanie rezerwacji w tym samym czasie",
+      "then": "system przyznaje rezerwację tylko jednemu użytkownikowi, zachowując spójność stanu końcowego"
+    },
+    {
+      "id": "AC3",
+      "given": "użytkownik ma aktywną rezerwację, a do wizyty pozostało więcej niż 24 godziny",
+      "when": "użytkownik anuluje rezerwację",
+      "then": "system zmienia status na CANCELLED oraz ponownie udostępnia termin"
+    },
+    {
+      "id": "AC4",
+      "given": "użytkownik ma aktywną rezerwację, a do wizyty pozostało mniej niż 24 godziny",
+      "when": "użytkownik próbuje anulować rezerwację",
+      "then": "system blokuje anulowanie i wyświetla informację o ograniczeniach"
+    },
+    {
+      "id": "AC5",
+      "given": "użytkownik posiada już 3 aktywne rezerwacje",
+      "when": "użytkownik próbuje zarezerwować kolejny termin",
+      "then": "system odrzuca operację, chyba że administrator zastosował wyjątek"
+    },
+    {
+      "id": "AC6",
+      "given": "administrator jest zalogowany i posiada uprawnienia do konfiguracji zasad systemowych",
+      "when": "administrator definiuje lub zmienia zasady rezerwacji oraz anulowania",
+      "then": "system zapisuje konfigurację i stosuje ją do nowych prób rezerwacji oraz anulowania"
+    },
+    {
+      "id": "AC7",
+      "given": "występuje konflikt rezerwacji lub konflikt wynikający z reguł harmonogramu oraz administrator ma odpowiednie uprawnienia",
+      "when": "administrator zatwierdza wyjątek zgodnie z obowiązującymi zasadami organizacji",
+      "then": "system pozwala na realizację operacji mimo standardowego konfliktu i zapisuje informację o zastosowanym wyjątku"
+    }
+  ],
+  "metadata": {
+    "version": "hybrid",
+    "case_study": "appointment-booking",
+    "model_used": "gpt-5.4",
+    "prompt_log": "[SYSTEM]\nJesteś analitykiem wymagań. Odpowiadaj WYŁĄCZNIE poprawnym JSON.\nŻadnego Markdown ani komentarzy.\n[...]",
+    "human_changes": "FR3: zmodyfikowano ogólne warunki anulowania, dodając sztywny limit 'do 24 godzin przed zaplanowanym terminem'. FR4: zastąpiono stary wymóg definiowania ograniczeń nowym wymogiem o powrocie anulowanego terminu do puli dostępnych. FR5: doprecyzowano zakaz konfliktów poprzez jawne zablokowanie podwójnych rezerwacji. FR9: zastąpiono generyczny wymóg obsługi ról ścisłą definicją statusów wizyt (AVAILABLE, BOOKED, CANCELLED, COMPLETED). FR10: zastąpiono ogólny wymóg skalowalności kluczowym wymogiem biznesowym o limicie maksymalnie 3 aktywnych rezerwacji. NFR1: zastąpiono ogólną dostępność konkretnym wymogiem czasu odpowiedzi poniżej 1 sekundy. NFR4: zastąpiono ogólne zasady RBAC ścisłym wymogiem uwierzytelnienia. NFR5: zaktualizowano log audytowy (dawne NFR6) o znacznik czasu. NFR ogólne: usunięto NFR5, NFR7, NFR8 (dotyczące ogólnego bezpieczeństwa, konfiguracji UI i czytelności interfejsu), skracając listę z 8 do 5. US ogólne: doprecyzowano limit 24h w US3, usunięto US4, US7, US8 (dotyczące informacji o limitach w UI, dedykowanych widoków specjalisty oraz zarządzania rolami), przenumerowano listę z 10 do 7 punktów. AC ogólne: usunięto rozbudowane kryteria UI i poboczne (stare AC1, AC2, AC7, AC8, AC9, AC10, AC11, AC12), zmodyfikowano kryteria anulowania wprowadzając logikę 24h (nowe AC3, AC4), dodano nowe AC5 weryfikujące limit 3 rezerwacji. Zredukowano liczbę AC z 14 do 7, pozostawiając tylko kluczowe przepływy rezerwacji, współbieżności i konfiguracji administratora.",
+    "score": null
+  }
+}

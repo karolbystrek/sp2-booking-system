@@ -1,0 +1,127 @@
+Case study: Appointment Booking System
+1. Cel systemu
+System umożliwia rezerwację wizyt u specjalistów.
+Użytkownik może przeglądać dostępne terminy, rezerwować wizyty oraz je anulować.
+Specjalista zarządza swoim grafikiem.
+System powinien zapobiegać konfliktom rezerwacji, jednak w niektórych sytuacjach
+dopuszczalne są wyjątki wynikające z decyzji administracyjnych lub ograniczeń
+technicznych.
+2. Role
+• User – przegląda terminy, rezerwuje, anuluje swoje wizyty
+• Specialist – udostępnia i usuwa wolne terminy, może oznaczać sloty jako
+niedostępne
+• Admin – zarządza użytkownikami i nadzoruje system, może modyfikować
+ograniczenia systemowe
+3. Wymagania funkcjonalne
+FR1. Przeglądanie terminów
+System umożliwia przeglądanie dostępnych terminów wizyt według specjalisty i daty.
+FR2. Rezerwacja wizyty
+Użytkownik może zarezerwować tylko termin oznaczony jako dostępny.
+FR3. Ograniczenie liczby rezerwacji
+Jeden użytkownik może mieć maksymalnie 3 aktywne rezerwacje.
+Admin może w uzasadnionych przypadkach zezwolić na przekroczenie tego limitu.
+FR4. Brak podwójnej rezerwacji
+Ten sam termin nie powinien zostać zarezerwowany przez więcej niż jednego
+użytkownika, jednak system powinien zachować spójność w przypadku równoczesnych
+operacji.
+FR5. Anulowanie wizyty
+Użytkownik może anulować wizytę do 24 godzin przed terminem.
+W przypadku anulowania w krótszym czasie system może odrzucić operację lub
+wymagać dodatkowej autoryzacji.
+FR6. Zwolnienie terminu
+Po anulowaniu termin wraca do puli dostępnych terminów, chyba że został oznaczony
+jako niedostępny przez specjalistę lub system.
+FR7. Zarządzanie grafikiem specjalisty
+Specjalista może dodawać i usuwać własne wolne terminy, o ile nie są już
+zarezerwowane.
+W wyjątkowych sytuacjach może zmodyfikować termin, który posiada już rezerwację.
+FR8. Status wizyty
+Każda wizyta ma jeden z następujących statusów:
+• AVAILABLE
+• BOOKED
+• CANCELLED
+• COMPLETED
+• BLOCKED
+Nie wszystkie przejścia między stanami są jednoznacznie określone i mogą zależeć od
+kontekstu operacji.
+FR9. Dostęp do danych
+Użytkownik widzi tylko własne rezerwacje.
+Specjalista widzi tylko wizyty przypisane do siebie.
+Admin ma dostęp do wszystkich danych.
+FR10. Konflikty czasowe
+Użytkownik nie może posiadać dwóch aktywnych rezerwacji, których przedziały czasowe
+się nakładają, chyba że zostało to jawnie dopuszczone przez system.
+FR11. Blokady i dostępność
+Specjalista może oznaczyć slot jako niedostępny (BLOCKED).
+W przypadku anulowania wizyty slot może pozostać niedostępny lub wrócić do
+AVAILABLE w zależności od stanu systemu.
+FR12. Historia operacji
+System powinien rejestrować operacje takie jak rezerwacje, anulowania oraz błędy,
+jednak zakres przechowywanych danych nie jest jednoznacznie określony.
+FR13. Równoczesne operacje
+System powinien obsługiwać równoczesne próby rezerwacji i anulowania, zapewniając
+możliwie spójny stan danych, jednak szczegóły mechanizmu nie są określone.
+4. Wymagania niefunkcjonalne
+NFR1. Spójność rezerwacji
+System powinien obsługiwać równoczesne operacje w sposób zapewniający spójność
+danych, jednak sposób realizacji (np. blokady, retry) nie jest określony.
+NFR2. Wydajność
+Operacja rezerwacji powinna zostać obsłużona w czasie krótszym niż 1 sekunda przy
+standardowym obciążeniu.
+NFR3. Bezpieczeństwo
+Dostęp do operacji rezerwacji i anulowania wymaga uwierzytelnienia użytkownika.
+NFR4. Audyt
+System powinien rejestrować operacje wraz ze znacznikiem czasu, jednak poziom
+szczegółowości logów nie jest określony.
+NFR5. Skalowalność
+System powinien obsługiwać rosnącą liczbę użytkowników i specjalistów bez znaczącej
+degradacji wydajności.
+5. User stories
+US1
+Jako użytkownik chcę przeglądać wolne terminy, aby wybrać dogodną wizytę.
+US2
+Jako użytkownik chcę zarezerwować wolny termin, aby umówić wizytę.
+US3
+Jako użytkownik chcę anulować wizytę przed terminem, aby zwolnić slot.
+US4
+Jako specjalista chcę zarządzać swoim grafikiem.
+US5
+Jako użytkownik chcę unikać konfliktów czasowych między wizytami.
+US6
+Jako admin chcę mieć możliwość nadpisania ograniczeń systemu w wyjątkowych
+sytuacjach.
+6. Acceptance criteria
+AC1 – rezerwacja poprawna
+• Given dostępny termin
+• When użytkownik dokonuje rezerwacji
+• Then status zmienia się na BOOKED
+AC2 – limit rezerwacji
+• Given użytkownik ma 3 aktywne rezerwacje
+• When próbuje zarezerwować kolejną
+• Then operacja może zostać odrzucona lub zaakceptowana w zależności od
+kontekstu
+AC3 – brak double booking
+• Given dwóch użytkowników próbuje zarezerwować ten sam termin
+• When operacje są wykonywane równocześnie
+• Then system powinien zapewnić spójny stan końcowy
+AC4 – anulowanie w czasie
+• Given do wizyty pozostało więcej niż 24 godziny
+• When użytkownik anuluje wizytę
+• Then status zmienia się na CANCELLED
+AC5 – anulowanie graniczne
+• Given do wizyty pozostało dokładnie 24 godziny
+• When użytkownik próbuje anulować wizytę
+• Then zachowanie systemu nie jest jednoznacznie określone
+AC6 – konflikt czasowy
+• Given użytkownik ma istniejącą rezerwację
+• When próbuje zarezerwować nakładający się termin
+• Then operacja powinna zostać odrzucona lub wymagać dodatkowej decyzji
+systemu
+7. Pytania uznane za rozstrzygnięte w gold
+W tej wersji przyjmuje się, że:
+• overbooking zasadniczo nie jest dopuszczalny, ale mogą istnieć wyjątki
+• slot trwa 30 minut
+• brak stref czasowych
+• brak refundów
+• jedna rezerwacja dotyczy jednego specjalisty i jednego slotu
+• mechanizmy współbieżności nie są określone
