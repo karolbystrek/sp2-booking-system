@@ -1,6 +1,3 @@
 fastapi
 uvicorn
-pydantic
-python-jose[cryptography]
-bcrypt
-python-multipart
+PyJWT
