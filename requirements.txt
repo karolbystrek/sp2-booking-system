@@ -1,7 +1,6 @@
 fastapi
 uvicorn
-sqlalchemy
-httpx
-pyjwt
 pydantic
-python-dateutil
+python-jose[cryptography]
+bcrypt
+python-multipart
