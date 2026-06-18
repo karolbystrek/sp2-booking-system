@@ -1,5 +1,10 @@
 import pytest
-from fastapi import HTTPException
+
+fastapi = pytest.importorskip(
+    "fastapi",
+    reason="FastAPI is installed with the code/e2/gpt implementation.",
+)
+HTTPException = fastapi.HTTPException
 
 identity = pytest.importorskip(
     "src.identity_access.api.routes",
