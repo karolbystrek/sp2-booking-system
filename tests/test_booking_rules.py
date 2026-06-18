@@ -1,7 +1,12 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from fastapi import HTTPException
+
+fastapi = pytest.importorskip(
+    "fastapi",
+    reason="FastAPI is installed with the code/e2/gpt implementation.",
+)
+HTTPException = fastapi.HTTPException
 
 booking = pytest.importorskip(
     "src.booking.api.routes",
