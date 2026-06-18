@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from models import SessionLocal, SpecialistSchedule, init_db
+from .models import SessionLocal, SpecialistSchedule, init_db
 import httpx
 from datetime import datetime
 

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import SessionLocal, User, Role, SpecialistDetails, init_db
+from .models import SessionLocal, User, Role, SpecialistDetails, init_db
 import hashlib
 
 def get_password_hash(password: str) -> str:

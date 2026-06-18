@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from models import SessionLocal, Reservation, init_db
+from .models import SessionLocal, Reservation, init_db
 import httpx
 from datetime import datetime
 

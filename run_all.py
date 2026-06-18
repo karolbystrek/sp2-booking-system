@@ -18,7 +18,7 @@ processes = []
 def run_db_init():
     print("Initializing databases...")
     try:
-        subprocess.run([sys.executable, "init_db.py"], cwd="identity_service", check=True)
+        subprocess.run([sys.executable, "-m", "identity_service.init_db"], cwd=".", check=True)
         print("Identity DB initialized.")
     except Exception as e:
         print(f"Failed to initialize Identity DB: {e}")
@@ -31,8 +31,8 @@ if __name__ == "__main__":
     for svc in services:
         print(f"Starting {svc['name']} on port {svc['port']}...")
         process = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", str(svc['port'])],
-            cwd=svc['dir']
+            [sys.executable, "-m", "uvicorn", f"{svc['dir']}.main:app", "--host", "0.0.0.0", "--port", str(svc['port'])],
+            cwd="."
         )
         processes.append(process)
 

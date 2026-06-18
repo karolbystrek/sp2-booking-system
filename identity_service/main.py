@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from models import SessionLocal, User, Role, SpecialistDetails, init_db
+from .models import SessionLocal, User, Role, SpecialistDetails, init_db
 import jwt
 from datetime import datetime, timedelta
 import hashlib

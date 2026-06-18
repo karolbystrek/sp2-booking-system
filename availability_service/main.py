@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, Request
 from sqlalchemy.orm import Session
-from models import SessionLocal, AvailableSlot, init_db
+from .models import SessionLocal, AvailableSlot, init_db
 from datetime import datetime, timedelta
 import dateutil.parser
 

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, Request
 from sqlalchemy.orm import Session
-from models import SessionLocal, NotificationLog, init_db
+from .models import SessionLocal, NotificationLog, init_db
 
 app = FastAPI(title="Notifications Service")
 
