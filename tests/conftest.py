@@ -1,94 +1,65 @@
-from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from datetime import datetime, timedelta
 
 import pytest
 
+from audit_service import AuditService
+from booking_service import BookingService
+from models import Slot, SlotStatus
+from repository import InMemoryRepository
+from schedule_service import ScheduleService
 
-@pytest.fixture()
-def isolated_database(tmp_path, monkeypatch):
-    """Give every test a freshly seeded SQLite database."""
-    database = pytest.importorskip(
-        "src.shared.database",
-        reason="The code/e2/gpt implementation has not been integrated yet.",
-    )
-    monkeypatch.setattr(database, "DATABASE_PATH", tmp_path / "booking.sqlite3")
-    database.init_database()
-    return database
+
+DEFAULT_SPECIALIST_ID = 10
+DEFAULT_USER_ID = 1
 
 
 @pytest.fixture()
-def user_factory(isolated_database):
-    def load_user(email):
-        with isolated_database.get_connection() as connection:
-            user = dict(
-                connection.execute(
-                    "SELECT * FROM users WHERE email = ?", (email,)
-                ).fetchone()
-            )
-            roles = connection.execute(
-                """
-                SELECT r.name
-                FROM roles r
-                JOIN user_roles ur ON ur.role_id = r.id
-                WHERE ur.user_id = ?
-                ORDER BY r.name
-                """,
-                (user["id"],),
-            ).fetchall()
-        user["roles"] = [role["name"] for role in roles]
-        return user
-
-    return load_user
+def repo():
+    """Create a fresh in-memory repository for every test."""
+    return InMemoryRepository()
 
 
 @pytest.fixture()
-def patient(user_factory):
-    return user_factory("patient@example.com")
+def schedule_service(repo):
+    """Create the scheduling service used by BookingService."""
+    return ScheduleService(repo)
 
 
 @pytest.fixture()
-def specialist(user_factory):
-    return user_factory("specialist@example.com")
+def audit_service(repo):
+    """Create the audit service used by BookingService."""
+    return AuditService(repo)
 
 
 @pytest.fixture()
-def admin(user_factory):
-    return user_factory("admin@example.com")
+def service(repo, schedule_service, audit_service):
+    """Create BookingService with real collaborators and isolated state."""
+    return BookingService(repo, schedule_service, audit_service)
 
 
 @pytest.fixture()
-def slot_factory(isolated_database):
-    def create_slot(start_at=None, duration_minutes=60, status="AVAILABLE"):
-        start_at = start_at or datetime.now(timezone.utc) + timedelta(days=7)
-        end_at = start_at + timedelta(minutes=duration_minutes)
-        slot_id = str(uuid4())
+def slot_factory():
+    """Factory for deterministic, readable slot test data."""
 
-        with isolated_database.get_connection() as connection:
-            specialist_id = connection.execute(
-                "SELECT id FROM specialists LIMIT 1"
-            ).fetchone()["id"]
-            connection.execute(
-                """
-                INSERT INTO time_slots (
-                    id, specialist_id, start_at, end_at, status, version
-                )
-                VALUES (?, ?, ?, ?, ?, 1)
-                """,
-                (
-                    slot_id,
-                    specialist_id,
-                    start_at.isoformat(),
-                    end_at.isoformat(),
-                    status,
-                ),
-            )
-
-        return {
-            "id": slot_id,
-            "specialist_id": specialist_id,
-            "start_at": start_at.isoformat(),
-            "end_at": end_at.isoformat(),
-            "status": status,
-        }
+    def create_slot(
+        slot_id: int,
+        specialist_id: int = DEFAULT_SPECIALIST_ID,
+        hours_from_now: int = 48,
+        minutes_from_now: int = 0,
+        duration_minutes: int = 30,
+        status: SlotStatus = SlotStatus.AVAILABLE,
+    ) -> Slot:
+        start = datetime.utcnow() + timedelta(
+            hours=hours_from_now,
+            minutes=minutes_from_now,
+        )
+        end = start + timedelta(minutes=duration_minutes)
+        return Slot(
+            id=slot_id,
+            specialist_id=specialist_id,
+            start_time=start,
+            end_time=end,
+            status=status,
+        )
 
     return create_slot
