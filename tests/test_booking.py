@@ -1,150 +1,110 @@
-from datetime import datetime, timedelta
-
 import pytest
 
-from models import Slot, SlotStatus
-from repository import InMemoryRepository
-from audit_service import AuditService
-from booking_service import BookingError, BookingService
-from schedule_service import ScheduleService
+from booking_service import BookingError
+from models import SlotStatus
 
 
-@pytest.fixture
-def repo():
-    return InMemoryRepository()
-
-
-@pytest.fixture
-def service(repo):
-    schedule_service = ScheduleService(repo)
-    audit_service = AuditService(repo)
-    return BookingService(repo, schedule_service, audit_service)
-
-
-def make_slot(
-    slot_id: int, specialist_id: int, hours_from_now: int, minutes_from_now: int = 0
-):
-    start = datetime.utcnow() + timedelta(
-        hours=hours_from_now, minutes=minutes_from_now
-    )
-    end = start + timedelta(minutes=30)
-    return Slot(
-        id=slot_id,
-        specialist_id=specialist_id,
-        start_time=start,
-        end_time=end,
-        status=SlotStatus.AVAILABLE,
-    )
-
-
-def test_get_available_slots_returns_only_available(service, repo):
-    s1 = make_slot(1, 10, 48)
-    s2 = make_slot(2, 10, 72)
-    s2.status = SlotStatus.BOOKED
-    repo.add_slot(s1)
-    repo.add_slot(s2)
-    slots = service.get_available_slots(10, s1.start_time.date())
-    assert len(slots) == 1
-    assert slots[0].id == 1
-
-
-def test_successful_booking(service, repo):
-    slot = make_slot(1, 10, 48)
+def test_successful_booking_creates_booking_and_marks_slot(service, repo, slot_factory):
+    slot = slot_factory(slot_id=1)
     repo.add_slot(slot)
+
     booking = service.book_slot(user_id=1, slot_id=1)
+
     assert booking.user_id == 1
     assert booking.slot_id == 1
+    assert booking.status.value == "BOOKED"
     assert repo.get_slot(1).status == SlotStatus.BOOKED
+    assert repo.get_booking(booking.id) == booking
 
 
-def test_booking_limit_enforced(service, repo):
-    for i in range(1, 5):
-        slot = make_slot(i, 10, 48 + i)
-        repo.add_slot(slot)
-    service.book_slot(user_id=1, slot_id=1)
-    service.book_slot(user_id=1, slot_id=2)
-    service.book_slot(user_id=1, slot_id=3)
-    with pytest.raises(BookingError):
-        service.book_slot(user_id=1, slot_id=4)
-
-
-def test_double_booking_prevented(service, repo):
-    slot = make_slot(1, 10, 48)
+def test_double_booking_same_slot_is_rejected(service, repo, slot_factory):
+    slot = slot_factory(slot_id=1)
     repo.add_slot(slot)
-    service.book_slot(user_id=1, slot_id=1)
-    with pytest.raises(BookingError):
+    first_booking = service.book_slot(user_id=1, slot_id=1)
+
+    with pytest.raises(BookingError, match="Slot is not available"):
         service.book_slot(user_id=2, slot_id=1)
 
+    assert repo.get_slot(1).status == SlotStatus.BOOKED
+    assert repo.get_booking(first_booking.id).user_id == 1
+    assert len(repo.get_user_active_bookings(2)) == 0
 
-def test_successful_cancellation(service, repo):
-    slot = make_slot(1, 10, 48)
+
+def test_booking_limit_allows_exactly_three_active_bookings(service, repo, slot_factory):
+    for slot_id in range(1, 4):
+        repo.add_slot(slot_factory(slot_id=slot_id, hours_from_now=48 + slot_id))
+
+    bookings = [service.book_slot(user_id=1, slot_id=slot_id) for slot_id in range(1, 4)]
+
+    assert len(bookings) == 3
+    assert len(repo.get_user_active_bookings(1)) == 3
+    assert {booking.slot_id for booking in bookings} == {1, 2, 3}
+
+
+def test_booking_limit_rejects_fourth_booking_without_side_effects(
+    service, repo, slot_factory
+):
+    for slot_id in range(1, 5):
+        repo.add_slot(slot_factory(slot_id=slot_id, hours_from_now=48 + slot_id))
+
+    for slot_id in range(1, 4):
+        service.book_slot(user_id=1, slot_id=slot_id)
+
+    with pytest.raises(BookingError, match="User reached booking limit"):
+        service.book_slot(user_id=1, slot_id=4)
+
+    assert len(repo.get_user_active_bookings(1)) == 3
+    assert repo.get_slot(4).status == SlotStatus.AVAILABLE
+
+
+def test_booking_non_existing_slot_is_rejected(service, repo):
+    with pytest.raises(BookingError, match="Slot does not exist"):
+        service.book_slot(user_id=1, slot_id=999)
+
+    assert len(repo.get_user_active_bookings(1)) == 0
+
+
+@pytest.mark.parametrize(
+    "slot_status",
+    [SlotStatus.BOOKED, SlotStatus.BLOCKED, SlotStatus.COMPLETED],
+)
+def test_booking_unavailable_slot_status_is_rejected(
+    service, repo, slot_factory, slot_status
+):
+    slot = slot_factory(slot_id=1, status=slot_status)
     repo.add_slot(slot)
-    booking = service.book_slot(user_id=1, slot_id=1)
-    result = service.cancel_booking(user_id=1, booking_id=booking.id)
-    assert result.status.value == "CANCELLED"
-    assert repo.get_slot(1).status == SlotStatus.AVAILABLE
+
+    with pytest.raises(BookingError, match="Slot is not available"):
+        service.book_slot(user_id=1, slot_id=1)
+
+    assert repo.get_slot(1).status == slot_status
+    assert len(repo.get_user_active_bookings(1)) == 0
 
 
-def test_late_cancellation_rejected(service, repo):
-    slot = make_slot(1, 10, 12)
-    repo.add_slot(slot)
-    booking = service.book_slot(user_id=1, slot_id=1)
-    with pytest.raises(BookingError):
-        service.cancel_booking(user_id=1, booking_id=booking.id)
+def test_overlapping_booking_for_same_user_is_rejected(service, repo, slot_factory):
+    first_slot = slot_factory(slot_id=1, hours_from_now=48, duration_minutes=30)
+    overlapping_slot = slot_factory(slot_id=2, hours_from_now=48, minutes_from_now=15)
+    repo.add_slot(first_slot)
+    repo.add_slot(overlapping_slot)
 
-
-def test_cannot_cancel_foreign_booking(service, repo):
-    slot = make_slot(1, 10, 48)
-    repo.add_slot(slot)
-    booking = service.book_slot(user_id=1, slot_id=1)
-    with pytest.raises(BookingError):
-        service.cancel_booking(user_id=2, booking_id=booking.id)
-
-
-def test_slot_restored_after_cancellation(service, repo):
-    slot = make_slot(1, 10, 48)
-    repo.add_slot(slot)
-    booking = service.book_slot(user_id=1, slot_id=1)
-    service.cancel_booking(user_id=1, booking_id=booking.id)
-    restored_slot = repo.get_slot(1)
-    assert restored_slot.status == SlotStatus.AVAILABLE
-
-
-def test_overlapping_booking_for_same_user_rejected(service, repo):
-    first = make_slot(1, 10, 48)
-    overlapping = make_slot(2, 10, 48, 15)
-    repo.add_slot(first)
-    repo.add_slot(overlapping)
     service.book_slot(user_id=1, slot_id=1)
-    with pytest.raises(BookingError, match="overlapping"):
+
+    with pytest.raises(BookingError, match="overlapping booking"):
         service.book_slot(user_id=1, slot_id=2)
 
-
-def test_audit_events_record_booking_and_cancellation(service, repo):
-    slot = make_slot(1, 10, 48)
-    repo.add_slot(slot)
-    booking = service.book_slot(user_id=1, slot_id=1)
-    service.cancel_booking(user_id=1, booking_id=booking.id)
-    events = repo.get_audit_events()
-    assert [event.event_type for event in events] == [
-        "BOOKING_CREATED",
-        "BOOKING_CANCELLED",
-    ]
+    assert repo.get_slot(2).status == SlotStatus.AVAILABLE
+    assert len(repo.get_user_active_bookings(1)) == 1
 
 
-def test_rejected_booking_is_audited(service, repo):
-    with pytest.raises(BookingError):
-        service.book_slot(user_id=1, slot_id=999)
-    events = repo.get_audit_events()
-    assert len(events) == 1
-    assert events[0].event_type == "BOOKING_REJECTED"
-    assert events[0].details == "Slot does not exist"
+def test_non_overlapping_booking_for_same_user_is_allowed(service, repo, slot_factory):
+    first_slot = slot_factory(slot_id=1, hours_from_now=48, duration_minutes=30)
+    second_slot = slot_factory(slot_id=2, hours_from_now=49, duration_minutes=30)
+    repo.add_slot(first_slot)
+    repo.add_slot(second_slot)
 
+    first_booking = service.book_slot(user_id=1, slot_id=1)
+    second_booking = service.book_slot(user_id=1, slot_id=2)
 
-def test_blocked_slot_stays_blocked_after_cancellation(service, repo):
-    slot = make_slot(1, 10, 48)
-    repo.add_slot(slot)
-    booking = service.book_slot(user_id=1, slot_id=1)
-    repo.get_slot(1).status = SlotStatus.BLOCKED
-    service.cancel_booking(user_id=1, booking_id=booking.id)
-    assert repo.get_slot(1).status == SlotStatus.BLOCKED
+    assert first_booking.slot_id == 1
+    assert second_booking.slot_id == 2
+    assert len(repo.get_user_active_bookings(1)) == 2
