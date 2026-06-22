@@ -48,7 +48,7 @@ async def handle_event(request: Request, db: Session = Depends(get_db)):
             AvailableSlot.start_time == dateutil.parser.parse(payload["appointment_time"])
         ).first()
         if slot:
-            slot.is_booked = True
+            slot.is_booked = False
             slot.reservation_id = payload["reservation_id"]
             db.commit()
 
