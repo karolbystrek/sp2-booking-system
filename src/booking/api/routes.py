@@ -78,7 +78,7 @@ def create_reservation(
             "SELECT COUNT(*) FROM reservations WHERE user_id = ? AND status IN ('CREATED', 'CONFIRMED')",
             (user["id"],),
         ).fetchone()[0]
-        if active_count > policy["max_active_reservations"]:
+        if active_count >= policy["max_active_reservations"]:
             raise api_error(status.HTTP_409_CONFLICT, "ACTIVE_RESERVATION_LIMIT", "Active reservation limit was reached.")
 
         slot = row_to_dict(connection.execute("SELECT * FROM time_slots WHERE id = ?", (request.slotId,)).fetchone())
