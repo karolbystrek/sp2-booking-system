@@ -6,5 +6,5 @@ pyjwt
 pydantic
 python-dateutil
 pytest
-pytest-asynico
+pytest-asyncio
 pytest-cov
